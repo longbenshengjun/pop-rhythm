@@ -1,0 +1,957 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no,viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#08040f">
+<title>POP RHYTHM 5 － リズム曲用</title>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+  html,body{height:100%;overflow:hidden;background:#08040f;
+    font-family:"Hiragino Kaku Gothic ProN","Yu Gothic UI","Meiryo",system-ui,sans-serif;
+    color:#fff;user-select:none;touch-action:none}
+  #cv{position:fixed;inset:0;width:100%;height:100%;display:block}
+  .screen{position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;
+    justify-content:center;gap:18px;padding:24px;text-align:center;z-index:10;
+    overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch}
+  @media (max-width:760px){
+    .screen{justify-content:flex-start;gap:13px;padding:18px 12px 34px}
+    .card{padding:15px 15px}
+    .kb{width:52px;height:52px;font-size:18px}
+    button.big{padding:17px 46px}
+    button.diff{min-width:120px;padding:10px 14px}
+    .note{font-size:11px}
+  }
+  .hidden{display:none!important}
+  .logo{font-size:clamp(34px,7vw,72px);font-weight:900;letter-spacing:.04em;line-height:1;
+    background:linear-gradient(90deg,#ff4d9d,#ffd93d,#4dff88,#4db8ff,#c86bff,#ff4d9d);
+    background-size:300% 100%;-webkit-background-clip:text;background-clip:text;color:transparent;
+    animation:flow 6s linear infinite;filter:drop-shadow(0 4px 22px rgba(255,80,180,.5))}
+  @keyframes flow{to{background-position:300% 0}}
+  .sub{font-size:clamp(12px,2.4vw,16px);letter-spacing:.34em;color:#b9a8e0;font-weight:700}
+  .card{background:rgba(20,10,38,.72);border:1px solid rgba(255,255,255,.14);border-radius:20px;
+    padding:20px 26px;backdrop-filter:blur(14px);max-width:660px;width:100%;
+    box-shadow:0 18px 60px rgba(0,0,0,.55)}
+  .keyrow{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin:6px 0 4px}
+  .kb{width:60px;height:60px;border-radius:50%;display:flex;flex-direction:column;
+    align-items:center;justify-content:center;font-weight:900;font-size:21px;color:#1a0c26;
+    box-shadow:0 5px 0 rgba(0,0,0,.35),inset 0 -5px 10px rgba(0,0,0,.18),inset 0 6px 10px rgba(255,255,255,.6)}
+  .kb small{font-size:8.5px;font-weight:800;opacity:.72;letter-spacing:.02em}
+  .grp{font-size:11px;letter-spacing:.2em;color:#8f7fbb;margin-top:8px;font-weight:800}
+  .opt{display:flex;align-items:center;gap:12px;justify-content:space-between;
+    margin:11px 0;font-size:13px;font-weight:700;color:#d9cdf5}
+  .opt input[type=range]{flex:1;max-width:280px;accent-color:#ff4d9d;height:5px}
+  .val{min-width:74px;text-align:right;color:#ffd93d;font-variant-numeric:tabular-nums;font-weight:900}
+  button.big{font-family:inherit;font-size:20px;font-weight:900;letter-spacing:.16em;color:#2a0c1e;
+    border:0;border-radius:999px;padding:15px 52px;cursor:pointer;
+    background:linear-gradient(180deg,#fff3a8,#ffd93d 45%,#ffab2e);
+    box-shadow:0 7px 0 #b8700f,0 14px 34px rgba(255,190,60,.42);transition:transform .08s,box-shadow .08s}
+  button.big:active{transform:translateY(5px);box-shadow:0 2px 0 #b8700f,0 6px 18px rgba(255,190,60,.35)}
+  button.ghost{font-family:inherit;font-size:14px;font-weight:800;letter-spacing:.12em;color:#e9dcff;
+    background:rgba(255,255,255,.09);border:1px solid rgba(255,255,255,.24);border-radius:999px;
+    padding:11px 30px;cursor:pointer}
+  button.ghost:hover{background:rgba(255,255,255,.17)}
+  .note{font-size:11.5px;color:#8d7eb4;line-height:1.75}
+  .stats{display:grid;grid-template-columns:repeat(5,1fr);gap:7px;margin:16px 0 6px}
+  .st{background:rgba(255,255,255,.06);border-radius:12px;padding:9px 4px}
+  .st b{display:block;font-size:clamp(17px,4vw,25px);font-variant-numeric:tabular-nums}
+  .st span{font-size:9.5px;letter-spacing:.11em;opacity:.85;font-weight:800}
+  #rank{font-size:clamp(70px,17vw,140px);font-weight:900;line-height:.9;
+    background:linear-gradient(180deg,#fff,#ffd93d 40%,#ff8c3d);-webkit-background-clip:text;
+    background-clip:text;color:transparent;filter:drop-shadow(0 6px 20px rgba(255,170,60,.55))}
+  #loading{font-size:15px;letter-spacing:.24em;color:#c9b9ee;font-weight:800}
+  .bar{width:min(340px,72vw);height:7px;border-radius:99px;background:rgba(255,255,255,.14);overflow:hidden}
+  .bar>i{display:block;height:100%;width:0;border-radius:99px;
+    background:linear-gradient(90deg,#ff4d9d,#ffd93d);transition:width .18s}
+  .pill{display:inline-block;font-size:11px;font-weight:900;letter-spacing:.18em;padding:5px 15px;
+    border-radius:999px;background:linear-gradient(90deg,#4dff88,#4db8ff);color:#04231a}
+  .fc{font-size:15px;font-weight:900;letter-spacing:.2em;margin-top:6px;
+    background:linear-gradient(90deg,#ffd93d,#ff4d9d,#4db8ff);-webkit-background-clip:text;
+    background-clip:text;color:transparent}
+  .row{display:flex;gap:12px;flex-wrap:wrap;justify-content:center}
+  .tag{font-size:11px;font-weight:800;letter-spacing:.14em;color:#9d8ac9}
+  .diffrow{display:flex;gap:12px;flex-wrap:wrap;justify-content:center}
+  button.diff{font-family:inherit;cursor:pointer;display:flex;flex-direction:column;
+    align-items:center;gap:2px;padding:12px 30px;border-radius:16px;
+    background:rgba(255,255,255,.06);border:2px solid rgba(255,255,255,.16);
+    color:#cdbdf0;transition:.14s;min-width:150px}
+  button.diff:hover{background:rgba(255,255,255,.12)}
+  button.diff b{font-size:21px;font-weight:900;letter-spacing:.16em;color:#fff}
+  button.diff span{font-size:11px;font-weight:900;letter-spacing:.1em;color:#ffd93d;
+    font-variant-numeric:tabular-nums}
+  button.diff i{font-style:normal;font-size:10.5px;opacity:.72}
+  button.diff.on{border-color:#ffd93d;background:rgba(255,217,61,.14)}
+  button.diff.on b{color:#ffd93d}
+</style>
+</head>
+<body>
+<canvas id="cv"></canvas>
+
+<!-- ============ TITLE ============ -->
+<div class="screen" id="title">
+  <div class="logo">POP RHYTHM 5</div>
+  <div class="sub">リズム曲用 &nbsp;／&nbsp; BPM 140 &nbsp;／&nbsp; E minor</div>
+
+  <div class="diffrow">
+    <button class="diff" id="dEasy" data-d="easy">
+      <b>EASY</b><span id="nEasy">448 NOTES</span><i>8分中心・ゆったり</i>
+    </button>
+    <button class="diff" id="dHard" data-d="hard">
+      <b>HARD</b><span id="nHard">899 NOTES</span><i>16分・階段多め</i>
+    </button>
+    <button class="diff" id="dOrig" data-d="original">
+      <b>ORIGINAL</b><span id="nOrig">689 NOTES</span><i>あなたの手打ち譜面</i>
+    </button>
+  </div>
+
+  <div class="card">
+    <div class="grp">← MELODY 3つ（低い音 ─ 高い音） ────── DRUM →</div>
+    <div class="keyrow">
+      <div class="kb" style="background:linear-gradient(180deg,#ff9ecb,#ff4d9d)">A<small>低い音</small></div>
+      <div class="kb" style="background:linear-gradient(180deg,#ffeb9a,#ffd93d)">S<small>中くらい</small></div>
+      <div class="kb" style="background:linear-gradient(180deg,#a8ffc6,#4dff88)">D<small>高い音</small></div>
+      <div class="kb" style="background:linear-gradient(180deg,#a8dcff,#4db8ff)">K<small>ドラム</small></div>
+    </div>
+    <div class="note" style="margin-top:10px">
+      <b style="color:#4dff88">ノーツは曲が実際に鳴っている位置だけに置いてあります。</b><br>
+      左3つ（A・S・D）を押すと、その瞬間に曲の中で鳴っている音と<br>
+      同じ音程が鳴ります。音が高いノーツほど右のレーンに来るので、<br>
+      指の動きがそのまま旋律の形になります。<b style="color:#4db8ff">K はドラム</b>（キック／スネア）。<br>
+      上がる旋律・下がる旋律は <b style="color:#ffd93d">A→S→D の階段</b> になるように置いています。<br>
+      <b style="color:#c8a0ff">間奏（3:16〜3:48）だけバイオリン音色</b>に変わり、弦の旋律をなぞれます。<br>
+      EASY / HARD は 1番と2番、1番サビとラスサビ、間奏の繰り返しが<b style="color:#4dff88">まったく同じ譜面</b>。<br>
+      <b style="color:#4db8ff">ORIGINAL</b> はあなたの手打ちを16分グリッドに補正した譜面（連打は階段）。
+    </div>
+    <hr style="border:0;border-top:1px solid rgba(255,255,255,.1);margin:15px 0">
+    <div class="opt"><span>ノーツ速度</span><input type="range" id="spd" min="60" max="240" step="5" value="140"><span class="val" id="spdv">1.40</span></div>
+    <div class="opt"><span>判定オフセット</span><input type="range" id="off" min="-200" max="200" step="5" value="0"><span class="val" id="offv">0 ms</span></div>
+    <div class="opt"><span>曲の音量</span><input type="range" id="vol" min="0" max="100" step="1" value="72"><span class="val" id="volv">72%</span></div>
+    <div class="opt"><span>打鍵音の音量</span><input type="range" id="sev" min="0" max="100" step="1" value="85"><span class="val" id="sevv">85%</span></div>
+  </div>
+
+  <button class="big" id="startBtn">START</button>
+  <div class="note">PC：A・S・D・K キー ／ Space・Enter でスタート ・ Esc で一時停止<br>
+  <b style="color:#ffd93d">スマホ：画面下の4つのボタンをタップ</b>（音が出ないときはマナーモード解除）</div>
+</div>
+
+<!-- ============ LOADING ============ -->
+<div class="screen hidden" id="loading0">
+  <div class="logo" style="font-size:clamp(24px,5vw,44px)">LOADING</div>
+  <div class="bar"><i id="lbar"></i></div>
+  <div id="loading">音源をデコードしています…</div>
+</div>
+
+<!-- ============ PAUSE ============ -->
+<div class="screen hidden" id="pause" style="background:rgba(6,2,14,.82)">
+  <div class="logo" style="font-size:clamp(30px,6vw,56px)">PAUSED</div>
+  <div class="row">
+    <button class="ghost" id="resumeBtn">つづける</button>
+    <button class="ghost" id="retryBtn2">やりなおす</button>
+    <button class="ghost" id="quitBtn">タイトルへ</button>
+  </div>
+  <div class="note">Esc でも再開</div>
+</div>
+
+<!-- ============ RESULT ============ -->
+<div class="screen hidden" id="result" style="background:rgba(6,2,14,.9)">
+  <div class="sub">RESULT &nbsp;<span id="rdiff" style="color:#ffd93d">EASY</span></div>
+  <div id="rank">S</div>
+  <div id="fcbadge" class="fc hidden">FULL COMBO !!</div>
+  <div class="card">
+    <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:4px">
+      <span class="tag">SCORE</span>
+      <span style="font-size:clamp(28px,7vw,46px);font-weight:900;font-variant-numeric:tabular-nums" id="rScore">0</span>
+    </div>
+    <div style="display:flex;justify-content:space-between;align-items:baseline">
+      <span class="tag">ACCURACY</span><span style="font-weight:900;color:#4dff88" id="rAcc">0%</span>
+    </div>
+    <div style="display:flex;justify-content:space-between;align-items:baseline;margin-top:3px">
+      <span class="tag">MAX COMBO</span><span style="font-weight:900;color:#ffd93d" id="rCombo">0</span>
+    </div>
+    <div class="stats">
+      <div class="st"><b style="color:#fff6a8" id="rJ">0</b><span>JUST</span></div>
+      <div class="st"><b style="color:#4dff88" id="rG">0</b><span>GREAT</span></div>
+      <div class="st"><b style="color:#4db8ff" id="rO">0</b><span>GOOD</span></div>
+      <div class="st"><b style="color:#c8a0ff" id="rB">0</b><span>BAD</span></div>
+      <div class="st"><b style="color:#ff6b6b" id="rM">0</b><span>MISS</span></div>
+    </div>
+  </div>
+  <div class="row">
+    <button class="big" id="retryBtn">RETRY</button>
+    <button class="ghost" id="titleBtn">タイトルへ</button>
+  </div>
+</div>
+
+<script>
+"use strict";
+const CHARTS = {"easy":{"bpm":140.0,"offset":0.3064,"duration":288.6,"interlude":[195.73643990929705,228.30643990929704],"notes":[{"t":1.5922,"lane":0,"k":"mel","m":57,"i":"piano"},{"t":2.4493,"lane":2,"k":"mel","m":71,"i":"piano"},{"t":2.8779,"lane":1,"k":"mel","m":71,"i":"piano"},{"t":3.3064,"lane":0,"k":"mel","m":71,"i":"piano"},{"t":3.5207,"lane":2,"k":"mel","m":71,"i":"piano"},{"t":3.735,"lane":1,"k":"mel","m":71,"i":"piano"},{"t":3.735,"lane":3,"k":"snare"},{"t":3.9493,"lane":0,"k":"mel","m":71,"i":"piano"},{"t":4.1636,"lane":3,"k":"snare"},{"t":4.5922,"lane":2,"k":"mel","m":71,"i":"piano"},{"t":5.0207,"lane":3,"k":"snare"},{"t":5.235,"lane":2,"k":"mel","m":71,"i":"piano"},{"t":5.4493,"lane":1,"k":"mel","m":71,"i":"piano"},{"t":5.4493,"lane":3,"k":"snare"},{"t":5.8779,"lane":0,"k":"mel","m":66,"i":"piano"},{"t":6.3064,"lane":2,"k":"mel","m":67,"i":"piano"},{"t":6.5207,"lane":1,"k":"mel","m":66,"i":"piano"},{"t":6.735,"lane":3,"k":"snare"},{"t":6.9493,"lane":0,"k":"mel","m":67,"i":"piano"},{"t":7.1636,"lane":2,"k":"mel","m":67,"i":"piano"},{"t":7.1636,"lane":3,"k":"snare"},{"t":7.3779,"lane":1,"k":"mel","m":66,"i":"piano"},{"t":8.0207,"lane":3,"k":"snare"},{"t":8.4493,"lane":0,"k":"mel","m":71,"i":"piano"},{"t":8.8779,"lane":1,"k":"mel","m":69,"i":"piano"},{"t":9.3064,"lane":2,"k":"mel","m":71,"i":"piano"},{"t":9.735,"lane":3,"k":"snare"},{"t":10.1636,"lane":2,"k":"mel","m":71,"i":"piano"},{"t":10.3779,"lane":1,"k":"mel","m":71,"i":"piano"},{"t":10.5922,"lane":0,"k":"mel","m":71,"i":"piano"},{"t":10.5922,"lane":3,"k":"snare"},{"t":10.8064,"lane":2,"k":"mel","m":71,"i":"piano"},{"t":11.0207,"lane":1,"k":"mel","m":71,"i":"piano"},{"t":11.4493,"lane":0,"k":"mel","m":71,"i":"piano"},{"t":11.8779,"lane":2,"k":"mel","m":71,"i":"piano"},{"t":12.0922,"lane":1,"k":"mel","m":71,"i":"piano"},{"t":12.3064,"lane":0,"k":"mel","m":71,"i":"piano"},{"t":12.3064,"lane":3,"k":"snare"},{"t":12.735,"lane":2,"k":"mel","m":71,"i":"piano"},{"t":13.1636,"lane":3,"k":"snare"},{"t":13.3779,"lane":2,"k":"mel","m":66,"i":"piano"},{"t":13.5922,"lane":1,"k":"mel","m":67,"i":"piano"},{"t":13.8064,"lane":0,"k":"mel","m":67,"i":"piano"},{"t":14.0207,"lane":2,"k":"mel","m":67,"i":"piano"},{"t":14.0207,"lane":3,"k":"snare"},{"t":14.235,"lane":1,"k":"mel","m":66,"i":"piano"},{"t":14.8779,"lane":0,"k":"mel","m":66,"i":"piano"},{"t":15.735,"lane":1,"k":"mel","m":69,"i":"piano"},{"t":16.1636,"lane":2,"k":"mel","m":71,"i":"piano"},{"t":17.235,"lane":0,"k":"mel","m":64,"i":"piano"},{"t":17.4493,"lane":1,"k":"mel","m":67,"i":"piano"},{"t":17.4493,"lane":3,"k":"kick"},{"t":18.3064,"lane":1,"k":"mel","m":67,"i":"piano"},{"t":18.9493,"lane":2,"k":"mel","m":67,"i":"piano"},{"t":19.1636,"lane":1,"k":"mel","m":69,"i":"piano"},{"t":19.1636,"lane":3,"k":"snare"},{"t":19.5922,"lane":0,"k":"mel","m":71,"i":"piano"},{"t":20.0207,"lane":2,"k":"mel","m":64,"i":"piano"},{"t":20.6636,"lane":0,"k":"mel","m":64,"i":"piano"},{"t":20.8779,"lane":1,"k":"mel","m":67,"i":"piano"},{"t":21.735,"lane":0,"k":"mel","m":69,"i":"piano"},{"t":22.1636,"lane":1,"k":"mel","m":71,"i":"piano"},{"t":22.5922,"lane":2,"k":"mel","m":66,"i":"piano"},{"t":22.5922,"lane":3,"k":"kick"},{"t":23.0207,"lane":0,"k":"mel","m":71,"i":"piano"},{"t":24.3064,"lane":0,"k":"mel","m":62,"i":"piano"},{"t":24.5207,"lane":0,"k":"mel","m":64,"i":"piano"},{"t":25.5922,"lane":3,"k":"snare"},{"t":26.4493,"lane":0,"k":"mel","m":64,"i":"piano"},{"t":27.735,"lane":0,"k":"mel","m":62,"i":"piano"},{"t":29.235,"lane":2,"k":"mel","m":67,"i":"piano"},{"t":30.3064,"lane":2,"k":"mel","m":66,"i":"piano"},{"t":30.735,"lane":3,"k":"kick"},{"t":30.9493,"lane":2,"k":"mel","m":64,"i":"piano"},{"t":31.1636,"lane":1,"k":"mel","m":64,"i":"piano"},{"t":31.1636,"lane":3,"k":"kick"},{"t":31.5922,"lane":0,"k":"mel","m":59,"i":"piano"},{"t":31.8064,"lane":2,"k":"mel","m":59,"i":"piano"},{"t":32.0207,"lane":3,"k":"kick"},{"t":32.4493,"lane":3,"k":"kick"},{"t":32.6636,"lane":0,"k":"mel","m":59,"i":"piano"},{"t":32.8779,"lane":0,"k":"mel","m":62,"i":"piano"},{"t":32.8779,"lane":3,"k":"snare"},{"t":33.5207,"lane":2,"k":"mel","m":71,"i":"piano"},{"t":33.735,"lane":3,"k":"kick"},{"t":34.3779,"lane":2,"k":"mel","m":71,"i":"piano"},{"t":34.5922,"lane":3,"k":"kick"},{"t":34.8064,"lane":1,"k":"mel","m":67,"i":"piano"},{"t":35.0207,"lane":0,"k":"mel","m":67,"i":"piano"},{"t":35.235,"lane":2,"k":"mel","m":67,"i":"piano"},{"t":35.4493,"lane":1,"k":"mel","m":66,"i":"piano"},{"t":35.8779,"lane":0,"k":"mel","m":67,"i":"piano"},{"t":36.3064,"lane":2,"k":"mel","m":67,"i":"piano"},{"t":38.6636,"lane":2,"k":"mel","m":69,"i":"piano"},{"t":38.8779,"lane":2,"k":"mel","m":69,"i":"piano"},{"t":39.3064,"lane":3,"k":"kick"},{"t":39.735,"lane":3,"k":"kick"},{"t":42.3064,"lane":0,"k":"mel","m":59,"i":"piano"},{"t":43.1636,"lane":3,"k":"kick"},{"t":46.1636,"lane":1,"k":"mel","m":60,"i":"piano"},{"t":46.5922,"lane":3,"k":"kick"},{"t":50.0207,"lane":3,"k":"kick"},{"t":50.4493,"lane":0,"k":"mel","m":59,"i":"piano"},{"t":51.3064,"lane":3,"k":"snare"},{"t":51.735,"lane":2,"k":"mel","m":64,"i":"piano"},{"t":51.735,"lane":3,"k":"snare"},{"t":53.4493,"lane":3,"k":"kick"},{"t":56.8779,"lane":3,"k":"kick"},{"t":57.3064,"lane":1,"k":"mel","m":62,"i":"piano"},{"t":59.8779,"lane":3,"k":"snare"},{"t":60.3064,"lane":3,"k":"kick"},{"t":63.735,"lane":3,"k":"kick"},{"t":64.5922,"lane":2,"k":"mel","m":71,"i":"piano"},{"t":65.0207,"lane":2,"k":"mel","m":71,"i":"piano"},{"t":65.4493,"lane":3,"k":"kick"},{"t":65.8779,"lane":3,"k":"kick"},{"t":66.3064,"lane":3,"k":"kick"},{"t":66.735,"lane":3,"k":"kick"},{"t":67.1636,"lane":3,"k":"kick"},{"t":67.5922,"lane":3,"k":"kick"},{"t":68.0207,"lane":0,"k":"mel","m":59,"i":"piano"},{"t":71.0207,"lane":3,"k":"kick"},{"t":71.8779,"lane":1,"k":"mel","m":64,"i":"piano"},{"t":72.3064,"lane":3,"k":"kick"},{"t":72.735,"lane":3,"k":"kick"},{"t":73.1636,"lane":3,"k":"kick"},{"t":74.0207,"lane":2,"k":"mel","m":71,"i":"piano"},{"t":74.0207,"lane":3,"k":"kick"},{"t":74.4493,"lane":1,"k":"mel","m":67,"i":"piano"},{"t":74.8779,"lane":0,"k":"mel","m":64,"i":"piano"},{"t":75.735,"lane":3,"k":"kick"},{"t":78.3064,"lane":3,"k":"kick"},{"t":78.9493,"lane":0,"k":"mel","m":66,"i":"piano"},{"t":79.1636,"lane":3,"k":"kick"},{"t":79.5922,"lane":3,"k":"kick"},{"t":80.0207,"lane":3,"k":"kick"},{"t":80.8779,"lane":3,"k":"kick"},{"t":81.3064,"lane":3,"k":"kick"},{"t":81.735,"lane":1,"k":"mel","m":64,"i":"piano"},{"t":82.1636,"lane":2,"k":"mel","m":71,"i":"piano"},{"t":82.5922,"lane":3,"k":"kick"},{"t":83.4493,"lane":3,"k":"kick"},{"t":84.0922,"lane":0,"k":"mel","m":62,"i":"piano"},{"t":84.9493,"lane":0,"k":"mel","m":59,"i":"piano"},{"t":85.1636,"lane":1,"k":"mel","m":64,"i":"piano"},{"t":85.5922,"lane":2,"k":"mel","m":64,"i":"piano"},{"t":86.0207,"lane":3,"k":"kick"},{"t":86.8779,"lane":3,"k":"kick"},{"t":87.735,"lane":2,"k":"mel","m":66,"i":"piano"},{"t":87.735,"lane":3,"k":"kick"},{"t":88.1636,"lane":3,"k":"kick"},{"t":88.5922,"lane":1,"k":"mel","m":62,"i":"piano"},{"t":89.4493,"lane":3,"k":"kick"},{"t":90.3064,"lane":3,"k":"kick"},{"t":92.8779,"lane":3,"k":"kick"},{"t":93.3064,"lane":3,"k":"kick"},{"t":93.735,"lane":3,"k":"kick"},{"t":94.5922,"lane":3,"k":"kick"},{"t":95.0207,"lane":3,"k":"snare"},{"t":95.4493,"lane":1,"k":"mel","m":67,"i":"piano"},{"t":99.9493,"lane":2,"k":"mel","m":66,"i":"piano"},{"t":100.3779,"lane":1,"k":"mel","m":67,"i":"piano"},{"t":100.8064,"lane":0,"k":"mel","m":62,"i":"piano"},{"t":105.735,"lane":0,"k":"mel","m":64,"i":"piano"},{"t":106.1636,"lane":1,"k":"mel","m":64,"i":"piano"},{"t":106.5922,"lane":2,"k":"mel","m":67,"i":"piano"},{"t":106.5922,"lane":3,"k":"kick"},{"t":107.0207,"lane":0,"k":"mel","m":66,"i":"piano"},{"t":107.4493,"lane":1,"k":"mel","m":69,"i":"piano"},{"t":107.8779,"lane":2,"k":"mel","m":62,"i":"piano"},{"t":108.3064,"lane":0,"k":"mel","m":62,"i":"piano"},{"t":108.3064,"lane":3,"k":"snare"},{"t":108.735,"lane":1,"k":"mel","m":66,"i":"piano"},{"t":109.1636,"lane":2,"k":"mel","m":66,"i":"piano"},{"t":109.5922,"lane":0,"k":"mel","m":66,"i":"piano"},{"t":109.8064,"lane":1,"k":"mel","m":67,"i":"piano"},{"t":110.0207,"lane":2,"k":"mel","m":67,"i":"piano"},{"t":110.0207,"lane":3,"k":"kick"},{"t":110.4493,"lane":0,"k":"mel","m":71,"i":"piano"},{"t":110.8779,"lane":1,"k":"mel","m":66,"i":"piano"},{"t":111.3064,"lane":2,"k":"mel","m":67,"i":"piano"},{"t":111.735,"lane":0,"k":"mel","m":69,"i":"piano"},{"t":111.735,"lane":3,"k":"snare"},{"t":112.1636,"lane":1,"k":"mel","m":64,"i":"piano"},{"t":112.5922,"lane":2,"k":"mel","m":67,"i":"piano"},{"t":113.0207,"lane":0,"k":"mel","m":67,"i":"piano"},{"t":113.235,"lane":1,"k":"mel","m":67,"i":"piano"},{"t":113.4493,"lane":2,"k":"mel","m":67,"i":"piano"},{"t":113.4493,"lane":3,"k":"kick"},{"t":114.0922,"lane":0,"k":"mel","m":67,"i":"piano"},{"t":114.3064,"lane":1,"k":"mel","m":69,"i":"piano"},{"t":114.735,"lane":2,"k":"mel","m":69,"i":"piano"},{"t":115.1636,"lane":0,"k":"mel","m":66,"i":"piano"},{"t":115.1636,"lane":3,"k":"snare"},{"t":115.5922,"lane":1,"k":"mel","m":66,"i":"piano"},{"t":116.0207,"lane":2,"k":"mel","m":64,"i":"piano"},{"t":116.4493,"lane":0,"k":"mel","m":64,"i":"piano"},{"t":116.8779,"lane":1,"k":"mel","m":64,"i":"piano"},{"t":116.8779,"lane":3,"k":"kick"},{"t":117.3064,"lane":2,"k":"mel","m":67,"i":"piano"},{"t":117.9493,"lane":2,"k":"mel","m":71,"i":"piano"},{"t":118.1636,"lane":2,"k":"mel","m":71,"i":"piano"},{"t":118.8064,"lane":2,"k":"mel","m":71,"i":"piano"},{"t":119.4493,"lane":2,"k":"mel","m":71,"i":"piano"},{"t":119.6636,"lane":1,"k":"mel","m":69,"i":"piano"},{"t":119.8779,"lane":3,"k":"kick"},{"t":120.0922,"lane":0,"k":"mel","m":67,"i":"piano"},{"t":120.3064,"lane":1,"k":"mel","m":64,"i":"piano"},{"t":120.3064,"lane":3,"k":"kick"},{"t":120.735,"lane":0,"k":"mel","m":59,"i":"piano"},{"t":120.9493,"lane":2,"k":"mel","m":59,"i":"piano"},{"t":121.1636,"lane":3,"k":"kick"},{"t":121.5922,"lane":3,"k":"kick"},{"t":121.8064,"lane":0,"k":"mel","m":59,"i":"piano"},{"t":122.0207,"lane":0,"k":"mel","m":62,"i":"piano"},{"t":122.0207,"lane":3,"k":"snare"},{"t":122.6636,"lane":2,"k":"mel","m":71,"i":"piano"},{"t":122.8779,"lane":3,"k":"kick"},{"t":123.5207,"lane":2,"k":"mel","m":71,"i":"piano"},{"t":123.735,"lane":3,"k":"kick"},{"t":123.9493,"lane":1,"k":"mel","m":67,"i":"piano"},{"t":124.1636,"lane":0,"k":"mel","m":67,"i":"piano"},{"t":124.3779,"lane":2,"k":"mel","m":67,"i":"piano"},{"t":124.5922,"lane":1,"k":"mel","m":66,"i":"piano"},{"t":125.0207,"lane":0,"k":"mel","m":67,"i":"piano"},{"t":125.4493,"lane":2,"k":"mel","m":67,"i":"piano"},{"t":127.8064,"lane":2,"k":"mel","m":69,"i":"piano"},{"t":128.0207,"lane":2,"k":"mel","m":69,"i":"piano"},{"t":128.4493,"lane":3,"k":"kick"},{"t":128.8779,"lane":3,"k":"kick"},{"t":131.4493,"lane":0,"k":"mel","m":59,"i":"piano"},{"t":132.3064,"lane":3,"k":"kick"},{"t":135.3064,"lane":1,"k":"mel","m":60,"i":"piano"},{"t":135.735,"lane":3,"k":"kick"},{"t":139.1636,"lane":3,"k":"kick"},{"t":139.5922,"lane":0,"k":"mel","m":59,"i":"piano"},{"t":140.4493,"lane":3,"k":"snare"},{"t":140.8779,"lane":2,"k":"mel","m":64,"i":"piano"},{"t":140.8779,"lane":3,"k":"snare"},{"t":142.5922,"lane":3,"k":"kick"},{"t":146.0207,"lane":3,"k":"kick"},{"t":146.4493,"lane":1,"k":"mel","m":62,"i":"piano"},{"t":149.0207,"lane":3,"k":"snare"},{"t":149.4493,"lane":3,"k":"kick"},{"t":152.8779,"lane":3,"k":"kick"},{"t":153.735,"lane":2,"k":"mel","m":71,"i":"piano"},{"t":154.1636,"lane":2,"k":"mel","m":71,"i":"piano"},{"t":154.5922,"lane":3,"k":"kick"},{"t":155.0207,"lane":3,"k":"kick"},{"t":155.4493,"lane":3,"k":"kick"},{"t":155.8779,"lane":3,"k":"kick"},{"t":156.3064,"lane":3,"k":"kick"},{"t":156.735,"lane":3,"k":"kick"},{"t":157.1636,"lane":0,"k":"mel","m":59,"i":"piano"},{"t":160.1636,"lane":3,"k":"kick"},{"t":161.0207,"lane":1,"k":"mel","m":64,"i":"piano"},{"t":161.4493,"lane":3,"k":"kick"},{"t":161.8779,"lane":3,"k":"kick"},{"t":162.3064,"lane":3,"k":"kick"},{"t":163.1636,"lane":2,"k":"mel","m":71,"i":"piano"},{"t":163.1636,"lane":3,"k":"kick"},{"t":163.5922,"lane":1,"k":"mel","m":67,"i":"piano"},{"t":164.0207,"lane":0,"k":"mel","m":64,"i":"piano"},{"t":164.8779,"lane":3,"k":"kick"},{"t":167.4493,"lane":3,"k":"kick"},{"t":168.0922,"lane":0,"k":"mel","m":66,"i":"piano"},{"t":168.3064,"lane":3,"k":"kick"},{"t":168.735,"lane":3,"k":"kick"},{"t":169.1636,"lane":3,"k":"kick"},{"t":170.0207,"lane":3,"k":"kick"},{"t":170.4493,"lane":3,"k":"kick"},{"t":170.8779,"lane":1,"k":"mel","m":64,"i":"piano"},{"t":171.3064,"lane":2,"k":"mel","m":71,"i":"piano"},{"t":171.735,"lane":3,"k":"kick"},{"t":172.5922,"lane":3,"k":"kick"},{"t":173.235,"lane":0,"k":"mel","m":62,"i":"piano"},{"t":174.0922,"lane":0,"k":"mel","m":59,"i":"piano"},{"t":174.3064,"lane":1,"k":"mel","m":64,"i":"piano"},{"t":174.735,"lane":2,"k":"mel","m":64,"i":"piano"},{"t":175.1636,"lane":3,"k":"kick"},{"t":176.0207,"lane":3,"k":"kick"},{"t":176.8779,"lane":2,"k":"mel","m":66,"i":"piano"},{"t":176.8779,"lane":3,"k":"kick"},{"t":177.3064,"lane":3,"k":"kick"},{"t":177.735,"lane":1,"k":"mel","m":62,"i":"piano"},{"t":178.5922,"lane":3,"k":"kick"},{"t":179.4493,"lane":3,"k":"kick"},{"t":182.0207,"lane":3,"k":"kick"},{"t":182.4493,"lane":3,"k":"kick"},{"t":182.8779,"lane":3,"k":"kick"},{"t":183.735,"lane":3,"k":"kick"},{"t":184.1636,"lane":3,"k":"snare"},{"t":184.5922,"lane":1,"k":"mel","m":67,"i":"piano"},{"t":189.0922,"lane":2,"k":"mel","m":66,"i":"piano"},{"t":189.5207,"lane":1,"k":"mel","m":67,"i":"piano"},{"t":189.9493,"lane":0,"k":"mel","m":62,"i":"piano"},{"t":194.8779,"lane":0,"k":"mel","m":64,"i":"piano"},{"t":195.3064,"lane":1,"k":"mel","m":64,"i":"piano"},{"t":195.735,"lane":0,"k":"mel","m":69,"i":"violin"},{"t":196.1636,"lane":2,"k":"mel","m":68,"i":"violin"},{"t":198.3064,"lane":0,"k":"mel","m":59,"i":"violin"},{"t":199.1636,"lane":1,"k":"mel","m":64,"i":"violin"},{"t":200.0207,"lane":1,"k":"mel","m":64,"i":"violin"},{"t":201.0922,"lane":0,"k":"mel","m":57,"i":"violin"},{"t":201.3064,"lane":1,"k":"mel","m":60,"i":"violin"},{"t":201.735,"lane":2,"k":"mel","m":69,"i":"violin"},{"t":202.5922,"lane":0,"k":"mel","m":69,"i":"violin"},{"t":203.0207,"lane":2,"k":"mel","m":68,"i":"violin"},{"t":205.1636,"lane":0,"k":"mel","m":59,"i":"violin"},{"t":206.0207,"lane":1,"k":"mel","m":64,"i":"violin"},{"t":206.8779,"lane":1,"k":"mel","m":64,"i":"violin"},{"t":207.9493,"lane":0,"k":"mel","m":57,"i":"violin"},{"t":208.1636,"lane":1,"k":"mel","m":60,"i":"violin"},{"t":208.5922,"lane":2,"k":"mel","m":69,"i":"violin"},{"t":209.4493,"lane":0,"k":"mel","m":69,"i":"violin"},{"t":209.8779,"lane":2,"k":"mel","m":68,"i":"violin"},{"t":212.0207,"lane":0,"k":"mel","m":59,"i":"violin"},{"t":212.8779,"lane":1,"k":"mel","m":64,"i":"violin"},{"t":213.735,"lane":1,"k":"mel","m":64,"i":"violin"},{"t":214.8064,"lane":0,"k":"mel","m":57,"i":"violin"},{"t":215.0207,"lane":1,"k":"mel","m":60,"i":"violin"},{"t":215.4493,"lane":2,"k":"mel","m":69,"i":"violin"},{"t":216.3064,"lane":0,"k":"mel","m":69,"i":"violin"},{"t":216.735,"lane":2,"k":"mel","m":68,"i":"violin"},{"t":218.8779,"lane":0,"k":"mel","m":59,"i":"violin"},{"t":219.735,"lane":1,"k":"mel","m":64,"i":"violin"},{"t":220.5922,"lane":1,"k":"mel","m":64,"i":"violin"},{"t":221.6636,"lane":0,"k":"mel","m":57,"i":"violin"},{"t":221.8779,"lane":1,"k":"mel","m":60,"i":"violin"},{"t":222.3064,"lane":2,"k":"mel","m":69,"i":"violin"},{"t":227.8779,"lane":0,"k":"mel","m":64,"i":"violin"},{"t":228.3064,"lane":3,"k":"kick"},{"t":228.735,"lane":3,"k":"kick"},{"t":229.1636,"lane":3,"k":"kick"},{"t":230.0207,"lane":2,"k":"mel","m":71,"i":"piano"},{"t":230.0207,"lane":3,"k":"kick"},{"t":230.4493,"lane":1,"k":"mel","m":67,"i":"piano"},{"t":230.8779,"lane":0,"k":"mel","m":64,"i":"piano"},{"t":231.735,"lane":3,"k":"kick"},{"t":234.3064,"lane":3,"k":"kick"},{"t":234.9493,"lane":0,"k":"mel","m":66,"i":"piano"},{"t":235.1636,"lane":3,"k":"kick"},{"t":235.5922,"lane":3,"k":"kick"},{"t":236.0207,"lane":3,"k":"kick"},{"t":236.8779,"lane":3,"k":"kick"},{"t":237.3064,"lane":3,"k":"kick"},{"t":237.735,"lane":1,"k":"mel","m":64,"i":"piano"},{"t":238.1636,"lane":2,"k":"mel","m":71,"i":"piano"},{"t":238.5922,"lane":3,"k":"kick"},{"t":239.4493,"lane":3,"k":"kick"},{"t":240.0922,"lane":0,"k":"mel","m":62,"i":"piano"},{"t":240.9493,"lane":0,"k":"mel","m":59,"i":"piano"},{"t":241.1636,"lane":1,"k":"mel","m":64,"i":"piano"},{"t":241.5922,"lane":2,"k":"mel","m":64,"i":"piano"},{"t":242.0207,"lane":3,"k":"kick"},{"t":242.8779,"lane":3,"k":"kick"},{"t":243.735,"lane":2,"k":"mel","m":66,"i":"piano"},{"t":243.735,"lane":3,"k":"kick"},{"t":244.1636,"lane":3,"k":"kick"},{"t":244.5922,"lane":1,"k":"mel","m":62,"i":"piano"},{"t":245.4493,"lane":3,"k":"kick"},{"t":246.3064,"lane":3,"k":"kick"},{"t":248.8779,"lane":3,"k":"kick"},{"t":249.3064,"lane":3,"k":"kick"},{"t":249.735,"lane":3,"k":"kick"},{"t":250.5922,"lane":3,"k":"kick"},{"t":251.0207,"lane":3,"k":"snare"},{"t":251.4493,"lane":1,"k":"mel","m":67,"i":"piano"},{"t":255.9493,"lane":2,"k":"mel","m":66,"i":"piano"},{"t":256.3779,"lane":1,"k":"mel","m":67,"i":"piano"},{"t":256.8064,"lane":0,"k":"mel","m":62,"i":"piano"},{"t":261.735,"lane":0,"k":"mel","m":64,"i":"piano"},{"t":262.1636,"lane":1,"k":"mel","m":64,"i":"piano"},{"t":262.5922,"lane":2,"k":"mel","m":67,"i":"piano"},{"t":262.5922,"lane":3,"k":"kick"},{"t":263.0207,"lane":0,"k":"mel","m":66,"i":"piano"},{"t":263.4493,"lane":1,"k":"mel","m":69,"i":"piano"},{"t":263.8779,"lane":2,"k":"mel","m":62,"i":"piano"},{"t":264.3064,"lane":0,"k":"mel","m":62,"i":"piano"},{"t":264.3064,"lane":3,"k":"snare"},{"t":264.735,"lane":1,"k":"mel","m":66,"i":"piano"},{"t":265.1636,"lane":2,"k":"mel","m":66,"i":"piano"},{"t":265.5922,"lane":0,"k":"mel","m":66,"i":"piano"},{"t":265.8064,"lane":1,"k":"mel","m":67,"i":"piano"},{"t":266.0207,"lane":2,"k":"mel","m":67,"i":"piano"},{"t":266.0207,"lane":3,"k":"kick"},{"t":266.4493,"lane":0,"k":"mel","m":71,"i":"piano"},{"t":266.8779,"lane":1,"k":"mel","m":66,"i":"piano"},{"t":267.3064,"lane":2,"k":"mel","m":67,"i":"piano"},{"t":267.735,"lane":0,"k":"mel","m":69,"i":"piano"},{"t":267.735,"lane":3,"k":"snare"},{"t":268.1636,"lane":1,"k":"mel","m":64,"i":"piano"},{"t":268.5922,"lane":2,"k":"mel","m":67,"i":"piano"},{"t":269.0207,"lane":0,"k":"mel","m":67,"i":"piano"},{"t":269.235,"lane":1,"k":"mel","m":67,"i":"piano"},{"t":269.4493,"lane":2,"k":"mel","m":67,"i":"piano"},{"t":269.4493,"lane":3,"k":"kick"},{"t":270.0922,"lane":0,"k":"mel","m":67,"i":"piano"},{"t":270.3064,"lane":1,"k":"mel","m":69,"i":"piano"},{"t":270.735,"lane":2,"k":"mel","m":69,"i":"piano"},{"t":271.1636,"lane":0,"k":"mel","m":66,"i":"piano"},{"t":271.1636,"lane":3,"k":"snare"},{"t":271.5922,"lane":1,"k":"mel","m":66,"i":"piano"},{"t":272.0207,"lane":2,"k":"mel","m":64,"i":"piano"},{"t":272.4493,"lane":0,"k":"mel","m":64,"i":"piano"},{"t":272.8779,"lane":1,"k":"mel","m":64,"i":"piano"},{"t":272.8779,"lane":3,"k":"kick"},{"t":273.3064,"lane":2,"k":"mel","m":67,"i":"piano"},{"t":273.9493,"lane":2,"k":"mel","m":71,"i":"piano"},{"t":274.1636,"lane":2,"k":"mel","m":71,"i":"piano"},{"t":275.0207,"lane":1,"k":"mel","m":64,"i":"piano"},{"t":276.0922,"lane":2,"k":"mel","m":67,"i":"piano"},{"t":276.3064,"lane":1,"k":"mel","m":67,"i":"piano"},{"t":276.735,"lane":0,"k":"mel","m":66,"i":"piano"},{"t":277.1636,"lane":2,"k":"mel","m":62,"i":"piano"},{"t":277.5922,"lane":3,"k":"kick"},{"t":278.0207,"lane":0,"k":"mel","m":62,"i":"piano"},{"t":278.4493,"lane":1,"k":"mel","m":66,"i":"piano"},{"t":278.8779,"lane":2,"k":"mel","m":66,"i":"piano"},{"t":279.3064,"lane":3,"k":"snare"},{"t":279.5207,"lane":0,"k":"mel","m":67,"i":"piano"},{"t":279.735,"lane":1,"k":"mel","m":66,"i":"piano"},{"t":279.735,"lane":3,"k":"snare"},{"t":280.1636,"lane":2,"k":"mel","m":71,"i":"piano"},{"t":280.5922,"lane":3,"k":"snare"},{"t":281.0207,"lane":3,"k":"snare"},{"t":281.235,"lane":2,"k":"mel","m":69,"i":"piano"},{"t":281.4493,"lane":1,"k":"mel","m":69,"i":"piano"},{"t":281.8779,"lane":0,"k":"mel","m":67,"i":"piano"},{"t":282.3064,"lane":2,"k":"mel","m":64,"i":"piano"},{"t":282.9493,"lane":2,"k":"mel","m":67,"i":"piano"},{"t":283.1636,"lane":1,"k":"mel","m":67,"i":"piano"},{"t":283.1636,"lane":3,"k":"snare"},{"t":283.5922,"lane":0,"k":"mel","m":66,"i":"piano"},{"t":283.8064,"lane":2,"k":"mel","m":67,"i":"piano"},{"t":284.0207,"lane":1,"k":"mel","m":62,"i":"piano"},{"t":284.4493,"lane":3,"k":"snare"},{"t":284.6636,"lane":0,"k":"mel","m":62,"i":"piano"},{"t":284.8779,"lane":1,"k":"mel","m":62,"i":"piano"},{"t":284.8779,"lane":3,"k":"snare"},{"t":285.3064,"lane":2,"k":"mel","m":64,"i":"piano"},{"t":285.735,"lane":0,"k":"mel","m":64,"i":"piano"},{"t":286.1636,"lane":1,"k":"mel","m":64,"i":"piano"},{"t":286.3779,"lane":2,"k":"mel","m":64,"i":"piano"},{"t":286.5922,"lane":0,"k":"mel","m":64,"i":"piano"},{"t":286.5922,"lane":3,"k":"snare"},{"t":287.0207,"lane":1,"k":"mel","m":64,"i":"piano"},{"t":287.4493,"lane":3,"k":"kick"}]},"hard":{"bpm":140.0,"offset":0.3064,"duration":288.6,"interlude":[195.73643990929705,228.30643990929704],"notes":[{"t":1.5922,"lane":1,"k":"mel","m":57,"i":"piano"},{"t":1.8064,"lane":3,"k":"kick"},{"t":2.0207,"lane":3,"k":"kick"},{"t":2.235,"lane":3,"k":"kick"},{"t":2.3422,"lane":2,"k":"mel","m":69,"i":"piano"},{"t":2.4493,"lane":1,"k":"mel","m":71,"i":"piano"},{"t":2.6636,"lane":3,"k":"kick"},{"t":2.7707,"lane":0,"k":"mel","m":72,"i":"piano"},{"t":2.8779,"lane":2,"k":"mel","m":71,"i":"piano"},{"t":3.0922,"lane":1,"k":"mel","m":71,"i":"piano"},{"t":3.3064,"lane":0,"k":"mel","m":71,"i":"piano"},{"t":3.4136,"lane":2,"k":"mel","m":71,"i":"piano"},{"t":3.5207,"lane":1,"k":"mel","m":71,"i":"piano"},{"t":3.735,"lane":0,"k":"mel","m":71,"i":"piano"},{"t":3.735,"lane":3,"k":"snare"},{"t":3.9493,"lane":2,"k":"mel","m":71,"i":"piano"},{"t":4.1636,"lane":1,"k":"mel","m":71,"i":"piano"},{"t":4.5922,"lane":0,"k":"mel","m":71,"i":"piano"},{"t":4.8064,"lane":3,"k":"kick"},{"t":5.0207,"lane":2,"k":"mel","m":71,"i":"piano"},{"t":5.235,"lane":1,"k":"mel","m":71,"i":"piano"},{"t":5.4493,"lane":0,"k":"mel","m":71,"i":"piano"},{"t":5.4493,"lane":3,"k":"snare"},{"t":5.8779,"lane":2,"k":"mel","m":66,"i":"piano"},{"t":6.0922,"lane":3,"k":"kick"},{"t":6.3064,"lane":1,"k":"mel","m":67,"i":"piano"},{"t":6.5207,"lane":0,"k":"mel","m":66,"i":"piano"},{"t":6.735,"lane":2,"k":"mel","m":67,"i":"piano"},{"t":6.8422,"lane":1,"k":"mel","m":67,"i":"piano"},{"t":6.9493,"lane":0,"k":"mel","m":67,"i":"piano"},{"t":7.1636,"lane":2,"k":"mel","m":67,"i":"piano"},{"t":7.1636,"lane":3,"k":"snare"},{"t":7.3779,"lane":1,"k":"mel","m":66,"i":"piano"},{"t":7.5922,"lane":0,"k":"mel","m":71,"i":"piano"},{"t":7.9136,"lane":2,"k":"mel","m":67,"i":"piano"},{"t":8.0207,"lane":1,"k":"mel","m":72,"i":"piano"},{"t":8.235,"lane":0,"k":"mel","m":74,"i":"piano"},{"t":8.4493,"lane":2,"k":"mel","m":71,"i":"piano"},{"t":8.6636,"lane":1,"k":"mel","m":69,"i":"piano"},{"t":8.8779,"lane":0,"k":"mel","m":69,"i":"piano"},{"t":8.8779,"lane":3,"k":"kick"},{"t":9.3064,"lane":2,"k":"mel","m":71,"i":"piano"},{"t":9.735,"lane":1,"k":"mel","m":71,"i":"piano"},{"t":9.9493,"lane":3,"k":"kick"},{"t":10.1636,"lane":0,"k":"mel","m":71,"i":"piano"},{"t":10.2707,"lane":2,"k":"mel","m":72,"i":"piano"},{"t":10.3779,"lane":1,"k":"mel","m":71,"i":"piano"},{"t":10.5922,"lane":0,"k":"mel","m":71,"i":"piano"},{"t":10.5922,"lane":3,"k":"snare"},{"t":10.8064,"lane":2,"k":"mel","m":71,"i":"piano"},{"t":11.0207,"lane":1,"k":"mel","m":71,"i":"piano"},{"t":11.3422,"lane":0,"k":"mel","m":71,"i":"piano"},{"t":11.4493,"lane":2,"k":"mel","m":71,"i":"piano"},{"t":11.6636,"lane":3,"k":"kick"},{"t":11.8779,"lane":1,"k":"mel","m":71,"i":"piano"},{"t":12.0922,"lane":0,"k":"mel","m":71,"i":"piano"},{"t":12.3064,"lane":2,"k":"mel","m":71,"i":"piano"},{"t":12.3064,"lane":3,"k":"snare"},{"t":12.6279,"lane":1,"k":"mel","m":71,"i":"piano"},{"t":12.735,"lane":0,"k":"mel","m":71,"i":"piano"},{"t":13.1636,"lane":2,"k":"mel","m":67,"i":"piano"},{"t":13.3779,"lane":1,"k":"mel","m":66,"i":"piano"},{"t":13.5922,"lane":0,"k":"mel","m":67,"i":"piano"},{"t":13.6993,"lane":2,"k":"mel","m":67,"i":"piano"},{"t":13.8064,"lane":1,"k":"mel","m":67,"i":"piano"},{"t":14.0207,"lane":0,"k":"mel","m":67,"i":"piano"},{"t":14.0207,"lane":3,"k":"snare"},{"t":14.235,"lane":2,"k":"mel","m":66,"i":"piano"},{"t":14.4493,"lane":1,"k":"mel","m":66,"i":"piano"},{"t":14.8779,"lane":0,"k":"mel","m":66,"i":"piano"},{"t":15.735,"lane":1,"k":"mel","m":69,"i":"piano"},{"t":16.1636,"lane":2,"k":"mel","m":71,"i":"piano"},{"t":16.5922,"lane":3,"k":"kick"},{"t":16.8064,"lane":3,"k":"kick"},{"t":17.235,"lane":0,"k":"mel","m":64,"i":"piano"},{"t":17.4493,"lane":1,"k":"mel","m":67,"i":"piano"},{"t":17.4493,"lane":3,"k":"kick"},{"t":17.6636,"lane":3,"k":"kick"},{"t":18.1993,"lane":2,"k":"mel","m":69,"i":"piano"},{"t":18.3064,"lane":1,"k":"mel","m":67,"i":"piano"},{"t":18.5207,"lane":3,"k":"kick"},{"t":18.735,"lane":0,"k":"mel","m":71,"i":"piano"},{"t":18.9493,"lane":2,"k":"mel","m":67,"i":"piano"},{"t":19.1636,"lane":1,"k":"mel","m":69,"i":"piano"},{"t":19.1636,"lane":3,"k":"snare"},{"t":19.5922,"lane":0,"k":"mel","m":71,"i":"piano"},{"t":20.0207,"lane":2,"k":"mel","m":64,"i":"piano"},{"t":20.235,"lane":3,"k":"kick"},{"t":20.5564,"lane":0,"k":"mel","m":64,"i":"piano"},{"t":20.6636,"lane":1,"k":"mel","m":64,"i":"piano"},{"t":20.8779,"lane":2,"k":"mel","m":67,"i":"piano"},{"t":20.8779,"lane":3,"k":"kick"},{"t":21.0922,"lane":0,"k":"mel","m":67,"i":"piano"},{"t":21.735,"lane":0,"k":"mel","m":69,"i":"piano"},{"t":21.9493,"lane":3,"k":"kick"},{"t":22.1636,"lane":1,"k":"mel","m":71,"i":"piano"},{"t":22.3779,"lane":2,"k":"mel","m":67,"i":"piano"},{"t":22.5922,"lane":0,"k":"mel","m":66,"i":"piano"},{"t":22.5922,"lane":3,"k":"kick"},{"t":23.0207,"lane":1,"k":"mel","m":71,"i":"piano"},{"t":23.6636,"lane":3,"k":"kick"},{"t":23.8779,"lane":3,"k":"snare"},{"t":24.0922,"lane":0,"k":"mel","m":62,"i":"piano"},{"t":24.3064,"lane":1,"k":"mel","m":62,"i":"piano"},{"t":24.5207,"lane":2,"k":"mel","m":64,"i":"piano"},{"t":25.1636,"lane":0,"k":"mel","m":64,"i":"piano"},{"t":25.3779,"lane":1,"k":"mel","m":64,"i":"piano"},{"t":25.5922,"lane":3,"k":"snare"},{"t":25.8064,"lane":2,"k":"mel","m":64,"i":"piano"},{"t":26.0207,"lane":0,"k":"mel","m":64,"i":"piano"},{"t":26.4493,"lane":1,"k":"mel","m":64,"i":"piano"},{"t":26.8779,"lane":2,"k":"mel","m":67,"i":"piano"},{"t":27.0922,"lane":3,"k":"kick"},{"t":27.5207,"lane":2,"k":"mel","m":64,"i":"piano"},{"t":27.735,"lane":1,"k":"mel","m":62,"i":"piano"},{"t":27.9493,"lane":0,"k":"mel","m":64,"i":"piano"},{"t":28.5922,"lane":1,"k":"mel","m":64,"i":"piano"},{"t":28.8064,"lane":3,"k":"kick"},{"t":29.235,"lane":2,"k":"mel","m":67,"i":"piano"},{"t":29.8779,"lane":2,"k":"mel","m":67,"i":"piano"},{"t":30.0922,"lane":3,"k":"kick"},{"t":30.3064,"lane":1,"k":"mel","m":66,"i":"piano"},{"t":30.735,"lane":0,"k":"mel","m":64,"i":"piano"},{"t":30.9493,"lane":2,"k":"mel","m":64,"i":"piano"},{"t":31.1636,"lane":1,"k":"mel","m":64,"i":"piano"},{"t":31.1636,"lane":3,"k":"kick"},{"t":31.5922,"lane":0,"k":"mel","m":59,"i":"piano"},{"t":31.8064,"lane":2,"k":"mel","m":59,"i":"piano"},{"t":32.0207,"lane":3,"k":"kick"},{"t":32.4493,"lane":3,"k":"kick"},{"t":32.6636,"lane":0,"k":"mel","m":59,"i":"piano"},{"t":32.8779,"lane":1,"k":"mel","m":62,"i":"piano"},{"t":32.8779,"lane":3,"k":"snare"},{"t":33.0922,"lane":2,"k":"mel","m":64,"i":"piano"},{"t":33.3064,"lane":0,"k":"mel","m":71,"i":"piano"},{"t":33.5207,"lane":1,"k":"mel","m":71,"i":"piano"},{"t":33.735,"lane":2,"k":"mel","m":69,"i":"piano"},{"t":34.1636,"lane":0,"k":"mel","m":71,"i":"piano"},{"t":34.3779,"lane":1,"k":"mel","m":71,"i":"piano"},{"t":34.5922,"lane":2,"k":"mel","m":69,"i":"piano"},{"t":34.5922,"lane":3,"k":"kick"},{"t":34.8064,"lane":0,"k":"mel","m":67,"i":"piano"},{"t":35.0207,"lane":1,"k":"mel","m":67,"i":"piano"},{"t":35.235,"lane":2,"k":"mel","m":67,"i":"piano"},{"t":35.4493,"lane":0,"k":"mel","m":66,"i":"piano"},{"t":35.6636,"lane":1,"k":"mel","m":67,"i":"piano"},{"t":35.8779,"lane":2,"k":"mel","m":67,"i":"piano"},{"t":36.0922,"lane":0,"k":"mel","m":67,"i":"piano"},{"t":36.3064,"lane":1,"k":"mel","m":67,"i":"piano"},{"t":36.3064,"lane":3,"k":"kick"},{"t":36.735,"lane":2,"k":"mel","m":64,"i":"piano"},{"t":36.9493,"lane":0,"k":"mel","m":66,"i":"piano"},{"t":37.0564,"lane":1,"k":"mel","m":66,"i":"piano"},{"t":37.3779,"lane":3,"k":"kick"},{"t":37.5922,"lane":2,"k":"mel","m":64,"i":"piano"},{"t":37.8064,"lane":1,"k":"mel","m":62,"i":"piano"},{"t":38.0207,"lane":0,"k":"mel","m":62,"i":"piano"},{"t":38.6636,"lane":2,"k":"mel","m":69,"i":"piano"},{"t":38.8779,"lane":2,"k":"mel","m":69,"i":"piano"},{"t":39.0922,"lane":3,"k":"kick"},{"t":39.3064,"lane":3,"k":"kick"},{"t":39.5207,"lane":0,"k":"mel","m":64,"i":"piano"},{"t":39.735,"lane":3,"k":"kick"},{"t":40.1636,"lane":3,"k":"kick"},{"t":40.3779,"lane":2,"k":"mel","m":67,"i":"piano"},{"t":40.5922,"lane":2,"k":"mel","m":67,"i":"piano"},{"t":41.6636,"lane":2,"k":"mel","m":64,"i":"piano"},{"t":42.0922,"lane":1,"k":"mel","m":64,"i":"piano"},{"t":42.3064,"lane":0,"k":"mel","m":59,"i":"piano"},{"t":42.735,"lane":3,"k":"snare"},{"t":43.1636,"lane":0,"k":"mel","m":62,"i":"piano"},{"t":43.1636,"lane":3,"k":"kick"},{"t":44.4493,"lane":3,"k":"kick"},{"t":45.0922,"lane":3,"k":"kick"},{"t":45.5207,"lane":2,"k":"mel","m":66,"i":"piano"},{"t":46.1636,"lane":0,"k":"mel","m":60,"i":"piano"},{"t":46.3779,"lane":3,"k":"kick"},{"t":46.5922,"lane":0,"k":"mel","m":60,"i":"piano"},{"t":46.5922,"lane":3,"k":"kick"},{"t":47.0207,"lane":3,"k":"snare"},{"t":47.235,"lane":3,"k":"kick"},{"t":47.4493,"lane":1,"k":"mel","m":62,"i":"piano"},{"t":47.6636,"lane":3,"k":"kick"},{"t":47.8779,"lane":0,"k":"mel","m":60,"i":"piano"},{"t":48.735,"lane":3,"k":"kick"},{"t":50.0207,"lane":2,"k":"mel","m":62,"i":"piano"},{"t":50.0207,"lane":3,"k":"kick"},{"t":50.4493,"lane":1,"k":"mel","m":59,"i":"piano"},{"t":50.8779,"lane":0,"k":"mel","m":59,"i":"piano"},{"t":51.3064,"lane":3,"k":"snare"},{"t":51.735,"lane":1,"k":"mel","m":64,"i":"piano"},{"t":51.735,"lane":3,"k":"snare"},{"t":52.1636,"lane":3,"k":"kick"},{"t":53.4493,"lane":3,"k":"kick"},{"t":53.8779,"lane":2,"k":"mel","m":71,"i":"piano"},{"t":54.3064,"lane":3,"k":"snare"},{"t":55.1636,"lane":2,"k":"mel","m":71,"i":"piano"},{"t":55.1636,"lane":3,"k":"snare"},{"t":56.0207,"lane":2,"k":"mel","m":71,"i":"piano"},{"t":56.4493,"lane":1,"k":"mel","m":66,"i":"piano"},{"t":56.8779,"lane":3,"k":"kick"},{"t":57.0922,"lane":3,"k":"kick"},{"t":57.3064,"lane":0,"k":"mel","m":62,"i":"piano"},{"t":58.1636,"lane":3,"k":"kick"},{"t":58.3779,"lane":3,"k":"kick"},{"t":59.8779,"lane":0,"k":"mel","m":62,"i":"piano"},{"t":60.3064,"lane":3,"k":"kick"},{"t":61.1636,"lane":0,"k":"mel","m":62,"i":"piano"},{"t":62.0207,"lane":0,"k":"mel","m":62,"i":"piano"},{"t":62.235,"lane":3,"k":"kick"},{"t":62.4493,"lane":1,"k":"mel","m":62,"i":"piano"},{"t":62.6636,"lane":2,"k":"mel","m":62,"i":"piano"},{"t":63.3064,"lane":0,"k":"mel","m":60,"i":"piano"},{"t":63.5207,"lane":3,"k":"kick"},{"t":63.735,"lane":3,"k":"kick"},{"t":63.9493,"lane":3,"k":"kick"},{"t":64.1636,"lane":0,"k":"mel","m":62,"i":"piano"},{"t":64.5922,"lane":1,"k":"mel","m":71,"i":"piano"},{"t":65.0207,"lane":2,"k":"mel","m":71,"i":"piano"},{"t":65.4493,"lane":0,"k":"mel","m":69,"i":"piano"},{"t":65.4493,"lane":3,"k":"kick"},{"t":65.6636,"lane":1,"k":"mel","m":71,"i":"piano"},{"t":65.8779,"lane":3,"k":"kick"},{"t":66.3064,"lane":3,"k":"kick"},{"t":66.735,"lane":3,"k":"kick"},{"t":66.9493,"lane":0,"k":"mel","m":62,"i":"piano"},{"t":67.1636,"lane":3,"k":"kick"},{"t":67.5922,"lane":3,"k":"kick"},{"t":68.0207,"lane":0,"k":"mel","m":59,"i":"piano"},{"t":68.4493,"lane":1,"k":"mel","m":64,"i":"piano"},{"t":68.8779,"lane":2,"k":"mel","m":66,"i":"piano"},{"t":69.5207,"lane":2,"k":"mel","m":66,"i":"piano"},{"t":70.1636,"lane":3,"k":"kick"},{"t":71.0207,"lane":0,"k":"mel","m":64,"i":"piano"},{"t":71.235,"lane":1,"k":"mel","m":67,"i":"piano"},{"t":71.4493,"lane":2,"k":"mel","m":64,"i":"piano"},{"t":71.8779,"lane":0,"k":"mel","m":64,"i":"piano"},{"t":72.3064,"lane":1,"k":"mel","m":66,"i":"piano"},{"t":72.3064,"lane":3,"k":"kick"},{"t":72.735,"lane":3,"k":"kick"},{"t":73.1636,"lane":3,"k":"kick"},{"t":73.5922,"lane":2,"k":"mel","m":72,"i":"piano"},{"t":74.0207,"lane":1,"k":"mel","m":71,"i":"piano"},{"t":74.0207,"lane":3,"k":"kick"},{"t":74.235,"lane":3,"k":"kick"},{"t":74.4493,"lane":0,"k":"mel","m":67,"i":"piano"},{"t":74.6636,"lane":3,"k":"kick"},{"t":74.8779,"lane":2,"k":"mel","m":64,"i":"piano"},{"t":75.3064,"lane":1,"k":"mel","m":64,"i":"piano"},{"t":75.5207,"lane":3,"k":"kick"},{"t":75.735,"lane":3,"k":"kick"},{"t":75.9493,"lane":3,"k":"kick"},{"t":76.5922,"lane":3,"k":"kick"},{"t":77.235,"lane":0,"k":"mel","m":66,"i":"piano"},{"t":77.4493,"lane":1,"k":"mel","m":66,"i":"piano"},{"t":77.6636,"lane":3,"k":"kick"},{"t":78.0922,"lane":3,"k":"kick"},{"t":78.3064,"lane":3,"k":"kick"},{"t":78.9493,"lane":1,"k":"mel","m":66,"i":"piano"},{"t":79.1636,"lane":3,"k":"kick"},{"t":79.5922,"lane":3,"k":"kick"},{"t":79.8064,"lane":1,"k":"mel","m":66,"i":"piano"},{"t":80.0207,"lane":3,"k":"kick"},{"t":80.6636,"lane":3,"k":"kick"},{"t":80.8779,"lane":3,"k":"kick"},{"t":81.0922,"lane":3,"k":"kick"},{"t":81.3064,"lane":0,"k":"mel","m":60,"i":"piano"},{"t":81.735,"lane":1,"k":"mel","m":64,"i":"piano"},{"t":82.1636,"lane":2,"k":"mel","m":71,"i":"piano"},{"t":82.3779,"lane":0,"k":"mel","m":71,"i":"piano"},{"t":82.5922,"lane":1,"k":"mel","m":66,"i":"piano"},{"t":82.5922,"lane":3,"k":"kick"},{"t":82.8064,"lane":3,"k":"kick"},{"t":83.0207,"lane":2,"k":"mel","m":66,"i":"piano"},{"t":83.4493,"lane":0,"k":"mel","m":67,"i":"piano"},{"t":84.0922,"lane":0,"k":"mel","m":62,"i":"piano"},{"t":84.9493,"lane":0,"k":"mel","m":59,"i":"piano"},{"t":85.1636,"lane":1,"k":"mel","m":64,"i":"piano"},{"t":85.5922,"lane":2,"k":"mel","m":64,"i":"piano"},{"t":86.0207,"lane":0,"k":"mel","m":66,"i":"piano"},{"t":86.0207,"lane":3,"k":"kick"},{"t":86.4493,"lane":1,"k":"mel","m":66,"i":"piano"},{"t":86.6636,"lane":3,"k":"kick"},{"t":86.8779,"lane":3,"k":"kick"},{"t":87.3064,"lane":2,"k":"mel","m":66,"i":"piano"},{"t":87.735,"lane":2,"k":"mel","m":66,"i":"piano"},{"t":87.735,"lane":3,"k":"kick"},{"t":87.9493,"lane":3,"k":"kick"},{"t":88.1636,"lane":3,"k":"kick"},{"t":88.3779,"lane":3,"k":"kick"},{"t":88.5922,"lane":0,"k":"mel","m":62,"i":"piano"},{"t":89.0207,"lane":1,"k":"mel","m":64,"i":"piano"},{"t":89.235,"lane":3,"k":"kick"},{"t":89.4493,"lane":3,"k":"kick"},{"t":89.6636,"lane":3,"k":"kick"},{"t":90.0922,"lane":0,"k":"mel","m":62,"i":"piano"},{"t":90.3064,"lane":3,"k":"kick"},{"t":91.3779,"lane":0,"k":"mel","m":62,"i":"piano"},{"t":92.0207,"lane":0,"k":"mel","m":62,"i":"piano"},{"t":92.6636,"lane":2,"k":"mel","m":66,"i":"piano"},{"t":92.8779,"lane":3,"k":"kick"},{"t":93.3064,"lane":3,"k":"kick"},{"t":93.5207,"lane":3,"k":"kick"},{"t":93.735,"lane":0,"k":"mel","m":62,"i":"piano"},{"t":94.1636,"lane":1,"k":"mel","m":62,"i":"piano"},{"t":94.3779,"lane":3,"k":"kick"},{"t":94.5922,"lane":2,"k":"mel","m":66,"i":"piano"},{"t":94.5922,"lane":3,"k":"kick"},{"t":95.0207,"lane":0,"k":"mel","m":66,"i":"piano"},{"t":95.4493,"lane":1,"k":"mel","m":67,"i":"piano"},{"t":96.0922,"lane":3,"k":"kick"},{"t":96.3064,"lane":2,"k":"mel","m":67,"i":"piano"},{"t":96.5207,"lane":3,"k":"kick"},{"t":96.9493,"lane":3,"k":"kick"},{"t":98.235,"lane":3,"k":"kick"},{"t":98.8779,"lane":3,"k":"kick"},{"t":99.5207,"lane":2,"k":"mel","m":67,"i":"piano"},{"t":99.9493,"lane":1,"k":"mel","m":66,"i":"piano"},{"t":100.3779,"lane":0,"k":"mel","m":67,"i":"piano"},{"t":100.8064,"lane":2,"k":"mel","m":62,"i":"piano"},{"t":101.235,"lane":3,"k":"kick"},{"t":101.4493,"lane":2,"k":"mel","m":66,"i":"piano"},{"t":101.4493,"lane":3,"k":"snare"},{"t":102.3064,"lane":3,"k":"kick"},{"t":103.1636,"lane":3,"k":"kick"},{"t":103.5922,"lane":2,"k":"mel","m":67,"i":"piano"},{"t":105.3064,"lane":0,"k":"mel","m":67,"i":"piano"},{"t":105.735,"lane":1,"k":"mel","m":64,"i":"piano"},{"t":106.1636,"lane":2,"k":"mel","m":64,"i":"piano"},{"t":106.3779,"lane":0,"k":"mel","m":67,"i":"piano"},{"t":106.5922,"lane":1,"k":"mel","m":67,"i":"piano"},{"t":106.5922,"lane":3,"k":"kick"},{"t":107.0207,"lane":2,"k":"mel","m":66,"i":"piano"},{"t":107.235,"lane":0,"k":"mel","m":67,"i":"piano"},{"t":107.4493,"lane":1,"k":"mel","m":69,"i":"piano"},{"t":107.8779,"lane":2,"k":"mel","m":62,"i":"piano"},{"t":108.3064,"lane":0,"k":"mel","m":62,"i":"piano"},{"t":108.3064,"lane":3,"k":"snare"},{"t":108.5207,"lane":3,"k":"kick"},{"t":108.735,"lane":1,"k":"mel","m":66,"i":"piano"},{"t":108.9493,"lane":3,"k":"snare"},{"t":109.1636,"lane":2,"k":"mel","m":66,"i":"piano"},{"t":109.5922,"lane":0,"k":"mel","m":66,"i":"piano"},{"t":109.8064,"lane":1,"k":"mel","m":67,"i":"piano"},{"t":110.0207,"lane":2,"k":"mel","m":67,"i":"piano"},{"t":110.0207,"lane":3,"k":"kick"},{"t":110.235,"lane":0,"k":"mel","m":71,"i":"piano"},{"t":110.4493,"lane":1,"k":"mel","m":71,"i":"piano"},{"t":110.6636,"lane":3,"k":"snare"},{"t":110.8779,"lane":2,"k":"mel","m":66,"i":"piano"},{"t":111.3064,"lane":0,"k":"mel","m":67,"i":"piano"},{"t":111.5207,"lane":3,"k":"kick"},{"t":111.735,"lane":1,"k":"mel","m":69,"i":"piano"},{"t":111.735,"lane":3,"k":"snare"},{"t":112.1636,"lane":2,"k":"mel","m":64,"i":"piano"},{"t":112.5922,"lane":0,"k":"mel","m":67,"i":"piano"},{"t":113.0207,"lane":1,"k":"mel","m":67,"i":"piano"},{"t":113.235,"lane":2,"k":"mel","m":67,"i":"piano"},{"t":113.4493,"lane":0,"k":"mel","m":67,"i":"piano"},{"t":113.4493,"lane":3,"k":"kick"},{"t":113.8779,"lane":1,"k":"mel","m":66,"i":"piano"},{"t":114.0922,"lane":2,"k":"mel","m":67,"i":"piano"},{"t":114.3064,"lane":0,"k":"mel","m":69,"i":"piano"},{"t":114.735,"lane":1,"k":"mel","m":69,"i":"piano"},{"t":115.1636,"lane":2,"k":"mel","m":66,"i":"piano"},{"t":115.1636,"lane":3,"k":"snare"},{"t":115.3779,"lane":3,"k":"kick"},{"t":115.5922,"lane":0,"k":"mel","m":66,"i":"piano"},{"t":115.8064,"lane":3,"k":"kick"},{"t":116.0207,"lane":1,"k":"mel","m":64,"i":"piano"},{"t":116.4493,"lane":2,"k":"mel","m":64,"i":"piano"},{"t":116.6636,"lane":0,"k":"mel","m":64,"i":"piano"},{"t":116.8779,"lane":1,"k":"mel","m":64,"i":"piano"},{"t":116.8779,"lane":3,"k":"kick"},{"t":117.3064,"lane":2,"k":"mel","m":67,"i":"piano"},{"t":117.9493,"lane":0,"k":"mel","m":71,"i":"piano"},{"t":118.1636,"lane":1,"k":"mel","m":71,"i":"piano"},{"t":118.485,"lane":2,"k":"mel","m":71,"i":"piano"},{"t":118.5922,"lane":3,"k":"kick"},{"t":118.8064,"lane":0,"k":"mel","m":71,"i":"piano"},{"t":119.0207,"lane":1,"k":"mel","m":71,"i":"piano"},{"t":119.4493,"lane":2,"k":"mel","m":71,"i":"piano"},{"t":119.6636,"lane":0,"k":"mel","m":69,"i":"piano"},{"t":119.8779,"lane":1,"k":"mel","m":71,"i":"piano"},{"t":120.0922,"lane":2,"k":"mel","m":67,"i":"piano"},{"t":120.3064,"lane":1,"k":"mel","m":64,"i":"piano"},{"t":120.3064,"lane":3,"k":"kick"},{"t":120.735,"lane":0,"k":"mel","m":59,"i":"piano"},{"t":120.9493,"lane":2,"k":"mel","m":59,"i":"piano"},{"t":121.1636,"lane":3,"k":"kick"},{"t":121.5922,"lane":3,"k":"kick"},{"t":121.8064,"lane":0,"k":"mel","m":59,"i":"piano"},{"t":122.0207,"lane":1,"k":"mel","m":62,"i":"piano"},{"t":122.0207,"lane":3,"k":"snare"},{"t":122.235,"lane":2,"k":"mel","m":64,"i":"piano"},{"t":122.4493,"lane":0,"k":"mel","m":71,"i":"piano"},{"t":122.6636,"lane":1,"k":"mel","m":71,"i":"piano"},{"t":122.8779,"lane":2,"k":"mel","m":69,"i":"piano"},{"t":123.3064,"lane":0,"k":"mel","m":71,"i":"piano"},{"t":123.5207,"lane":1,"k":"mel","m":71,"i":"piano"},{"t":123.735,"lane":2,"k":"mel","m":69,"i":"piano"},{"t":123.735,"lane":3,"k":"kick"},{"t":123.9493,"lane":0,"k":"mel","m":67,"i":"piano"},{"t":124.1636,"lane":1,"k":"mel","m":67,"i":"piano"},{"t":124.3779,"lane":2,"k":"mel","m":67,"i":"piano"},{"t":124.5922,"lane":0,"k":"mel","m":66,"i":"piano"},{"t":124.8064,"lane":1,"k":"mel","m":67,"i":"piano"},{"t":125.0207,"lane":2,"k":"mel","m":67,"i":"piano"},{"t":125.235,"lane":0,"k":"mel","m":67,"i":"piano"},{"t":125.4493,"lane":1,"k":"mel","m":67,"i":"piano"},{"t":125.4493,"lane":3,"k":"kick"},{"t":125.8779,"lane":2,"k":"mel","m":64,"i":"piano"},{"t":126.0922,"lane":0,"k":"mel","m":66,"i":"piano"},{"t":126.1993,"lane":1,"k":"mel","m":66,"i":"piano"},{"t":126.5207,"lane":3,"k":"kick"},{"t":126.735,"lane":2,"k":"mel","m":64,"i":"piano"},{"t":126.9493,"lane":1,"k":"mel","m":62,"i":"piano"},{"t":127.1636,"lane":0,"k":"mel","m":62,"i":"piano"},{"t":127.8064,"lane":2,"k":"mel","m":69,"i":"piano"},{"t":128.0207,"lane":2,"k":"mel","m":69,"i":"piano"},{"t":128.235,"lane":3,"k":"kick"},{"t":128.4493,"lane":3,"k":"kick"},{"t":128.6636,"lane":0,"k":"mel","m":64,"i":"piano"},{"t":128.8779,"lane":3,"k":"kick"},{"t":129.3064,"lane":3,"k":"kick"},{"t":129.5207,"lane":2,"k":"mel","m":67,"i":"piano"},{"t":129.735,"lane":2,"k":"mel","m":67,"i":"piano"},{"t":130.8064,"lane":2,"k":"mel","m":64,"i":"piano"},{"t":131.235,"lane":1,"k":"mel","m":64,"i":"piano"},{"t":131.4493,"lane":0,"k":"mel","m":59,"i":"piano"},{"t":131.8779,"lane":3,"k":"snare"},{"t":132.3064,"lane":0,"k":"mel","m":62,"i":"piano"},{"t":132.3064,"lane":3,"k":"kick"},{"t":133.5922,"lane":3,"k":"kick"},{"t":134.235,"lane":3,"k":"kick"},{"t":134.6636,"lane":2,"k":"mel","m":66,"i":"piano"},{"t":135.3064,"lane":0,"k":"mel","m":60,"i":"piano"},{"t":135.5207,"lane":3,"k":"kick"},{"t":135.735,"lane":0,"k":"mel","m":60,"i":"piano"},{"t":135.735,"lane":3,"k":"kick"},{"t":136.1636,"lane":3,"k":"snare"},{"t":136.3779,"lane":3,"k":"kick"},{"t":136.5922,"lane":1,"k":"mel","m":62,"i":"piano"},{"t":136.8064,"lane":3,"k":"kick"},{"t":137.0207,"lane":0,"k":"mel","m":60,"i":"piano"},{"t":137.8779,"lane":3,"k":"kick"},{"t":139.1636,"lane":2,"k":"mel","m":62,"i":"piano"},{"t":139.1636,"lane":3,"k":"kick"},{"t":139.5922,"lane":1,"k":"mel","m":59,"i":"piano"},{"t":140.0207,"lane":0,"k":"mel","m":59,"i":"piano"},{"t":140.4493,"lane":3,"k":"snare"},{"t":140.8779,"lane":1,"k":"mel","m":64,"i":"piano"},{"t":140.8779,"lane":3,"k":"snare"},{"t":141.3064,"lane":3,"k":"kick"},{"t":142.5922,"lane":3,"k":"kick"},{"t":143.0207,"lane":2,"k":"mel","m":71,"i":"piano"},{"t":143.4493,"lane":3,"k":"snare"},{"t":144.3064,"lane":2,"k":"mel","m":71,"i":"piano"},{"t":144.3064,"lane":3,"k":"snare"},{"t":145.1636,"lane":2,"k":"mel","m":71,"i":"piano"},{"t":145.5922,"lane":1,"k":"mel","m":66,"i":"piano"},{"t":146.0207,"lane":3,"k":"kick"},{"t":146.235,"lane":3,"k":"kick"},{"t":146.4493,"lane":0,"k":"mel","m":62,"i":"piano"},{"t":147.3064,"lane":3,"k":"kick"},{"t":147.5207,"lane":3,"k":"kick"},{"t":149.0207,"lane":0,"k":"mel","m":62,"i":"piano"},{"t":149.4493,"lane":3,"k":"kick"},{"t":150.3064,"lane":0,"k":"mel","m":62,"i":"piano"},{"t":151.1636,"lane":0,"k":"mel","m":62,"i":"piano"},{"t":151.3779,"lane":3,"k":"kick"},{"t":151.5922,"lane":1,"k":"mel","m":62,"i":"piano"},{"t":151.8064,"lane":2,"k":"mel","m":62,"i":"piano"},{"t":152.4493,"lane":0,"k":"mel","m":60,"i":"piano"},{"t":152.6636,"lane":3,"k":"kick"},{"t":152.8779,"lane":3,"k":"kick"},{"t":153.0922,"lane":3,"k":"kick"},{"t":153.3064,"lane":0,"k":"mel","m":62,"i":"piano"},{"t":153.735,"lane":1,"k":"mel","m":71,"i":"piano"},{"t":154.1636,"lane":2,"k":"mel","m":71,"i":"piano"},{"t":154.5922,"lane":0,"k":"mel","m":69,"i":"piano"},{"t":154.5922,"lane":3,"k":"kick"},{"t":154.8064,"lane":1,"k":"mel","m":71,"i":"piano"},{"t":155.0207,"lane":3,"k":"kick"},{"t":155.4493,"lane":3,"k":"kick"},{"t":155.8779,"lane":3,"k":"kick"},{"t":156.0922,"lane":0,"k":"mel","m":62,"i":"piano"},{"t":156.3064,"lane":3,"k":"kick"},{"t":156.735,"lane":3,"k":"kick"},{"t":157.1636,"lane":0,"k":"mel","m":59,"i":"piano"},{"t":157.5922,"lane":1,"k":"mel","m":64,"i":"piano"},{"t":158.0207,"lane":2,"k":"mel","m":66,"i":"piano"},{"t":158.6636,"lane":2,"k":"mel","m":66,"i":"piano"},{"t":159.3064,"lane":3,"k":"kick"},{"t":160.1636,"lane":0,"k":"mel","m":64,"i":"piano"},{"t":160.3779,"lane":1,"k":"mel","m":67,"i":"piano"},{"t":160.5922,"lane":2,"k":"mel","m":64,"i":"piano"},{"t":161.0207,"lane":0,"k":"mel","m":64,"i":"piano"},{"t":161.4493,"lane":1,"k":"mel","m":66,"i":"piano"},{"t":161.4493,"lane":3,"k":"kick"},{"t":161.8779,"lane":3,"k":"kick"},{"t":162.3064,"lane":3,"k":"kick"},{"t":162.735,"lane":2,"k":"mel","m":72,"i":"piano"},{"t":163.1636,"lane":1,"k":"mel","m":71,"i":"piano"},{"t":163.1636,"lane":3,"k":"kick"},{"t":163.3779,"lane":3,"k":"kick"},{"t":163.5922,"lane":0,"k":"mel","m":67,"i":"piano"},{"t":163.8064,"lane":3,"k":"kick"},{"t":164.0207,"lane":2,"k":"mel","m":64,"i":"piano"},{"t":164.4493,"lane":1,"k":"mel","m":64,"i":"piano"},{"t":164.6636,"lane":3,"k":"kick"},{"t":164.8779,"lane":3,"k":"kick"},{"t":165.0922,"lane":3,"k":"kick"},{"t":165.735,"lane":3,"k":"kick"},{"t":166.3779,"lane":0,"k":"mel","m":66,"i":"piano"},{"t":166.5922,"lane":1,"k":"mel","m":66,"i":"piano"},{"t":166.8064,"lane":3,"k":"kick"},{"t":167.235,"lane":3,"k":"kick"},{"t":167.4493,"lane":3,"k":"kick"},{"t":168.0922,"lane":1,"k":"mel","m":66,"i":"piano"},{"t":168.3064,"lane":3,"k":"kick"},{"t":168.735,"lane":3,"k":"kick"},{"t":168.9493,"lane":1,"k":"mel","m":66,"i":"piano"},{"t":169.1636,"lane":3,"k":"kick"},{"t":169.8064,"lane":3,"k":"kick"},{"t":170.0207,"lane":3,"k":"kick"},{"t":170.235,"lane":3,"k":"kick"},{"t":170.4493,"lane":0,"k":"mel","m":60,"i":"piano"},{"t":170.8779,"lane":1,"k":"mel","m":64,"i":"piano"},{"t":171.3064,"lane":2,"k":"mel","m":71,"i":"piano"},{"t":171.5207,"lane":0,"k":"mel","m":71,"i":"piano"},{"t":171.735,"lane":1,"k":"mel","m":66,"i":"piano"},{"t":171.735,"lane":3,"k":"kick"},{"t":171.9493,"lane":3,"k":"kick"},{"t":172.1636,"lane":2,"k":"mel","m":66,"i":"piano"},{"t":172.5922,"lane":0,"k":"mel","m":67,"i":"piano"},{"t":173.235,"lane":0,"k":"mel","m":62,"i":"piano"},{"t":174.0922,"lane":0,"k":"mel","m":59,"i":"piano"},{"t":174.3064,"lane":1,"k":"mel","m":64,"i":"piano"},{"t":174.735,"lane":2,"k":"mel","m":64,"i":"piano"},{"t":175.1636,"lane":0,"k":"mel","m":66,"i":"piano"},{"t":175.1636,"lane":3,"k":"kick"},{"t":175.5922,"lane":1,"k":"mel","m":66,"i":"piano"},{"t":175.8064,"lane":3,"k":"kick"},{"t":176.0207,"lane":3,"k":"kick"},{"t":176.4493,"lane":2,"k":"mel","m":66,"i":"piano"},{"t":176.8779,"lane":2,"k":"mel","m":66,"i":"piano"},{"t":176.8779,"lane":3,"k":"kick"},{"t":177.0922,"lane":3,"k":"kick"},{"t":177.3064,"lane":3,"k":"kick"},{"t":177.5207,"lane":3,"k":"kick"},{"t":177.735,"lane":0,"k":"mel","m":62,"i":"piano"},{"t":178.1636,"lane":1,"k":"mel","m":64,"i":"piano"},{"t":178.3779,"lane":3,"k":"kick"},{"t":178.5922,"lane":3,"k":"kick"},{"t":178.8064,"lane":3,"k":"kick"},{"t":179.235,"lane":0,"k":"mel","m":62,"i":"piano"},{"t":179.4493,"lane":3,"k":"kick"},{"t":180.5207,"lane":0,"k":"mel","m":62,"i":"piano"},{"t":181.1636,"lane":0,"k":"mel","m":62,"i":"piano"},{"t":181.8064,"lane":2,"k":"mel","m":66,"i":"piano"},{"t":182.0207,"lane":3,"k":"kick"},{"t":182.4493,"lane":3,"k":"kick"},{"t":182.6636,"lane":3,"k":"kick"},{"t":182.8779,"lane":0,"k":"mel","m":62,"i":"piano"},{"t":183.3064,"lane":1,"k":"mel","m":62,"i":"piano"},{"t":183.5207,"lane":3,"k":"kick"},{"t":183.735,"lane":2,"k":"mel","m":66,"i":"piano"},{"t":183.735,"lane":3,"k":"kick"},{"t":184.1636,"lane":0,"k":"mel","m":66,"i":"piano"},{"t":184.5922,"lane":1,"k":"mel","m":67,"i":"piano"},{"t":185.235,"lane":3,"k":"kick"},{"t":185.4493,"lane":2,"k":"mel","m":67,"i":"piano"},{"t":185.6636,"lane":3,"k":"kick"},{"t":186.0922,"lane":3,"k":"kick"},{"t":187.3779,"lane":3,"k":"kick"},{"t":188.0207,"lane":3,"k":"kick"},{"t":188.6636,"lane":2,"k":"mel","m":67,"i":"piano"},{"t":189.0922,"lane":1,"k":"mel","m":66,"i":"piano"},{"t":189.5207,"lane":0,"k":"mel","m":67,"i":"piano"},{"t":189.9493,"lane":2,"k":"mel","m":62,"i":"piano"},{"t":190.3779,"lane":3,"k":"kick"},{"t":190.5922,"lane":2,"k":"mel","m":66,"i":"piano"},{"t":190.5922,"lane":3,"k":"snare"},{"t":191.4493,"lane":3,"k":"kick"},{"t":192.3064,"lane":3,"k":"kick"},{"t":192.735,"lane":2,"k":"mel","m":67,"i":"piano"},{"t":194.4493,"lane":0,"k":"mel","m":67,"i":"piano"},{"t":194.8779,"lane":1,"k":"mel","m":64,"i":"piano"},{"t":195.3064,"lane":2,"k":"mel","m":64,"i":"piano"},{"t":195.5207,"lane":0,"k":"mel","m":67,"i":"piano"},{"t":195.735,"lane":1,"k":"mel","m":69,"i":"violin"},{"t":195.735,"lane":3,"k":"kick"},{"t":196.0564,"lane":0,"k":"mel","m":69,"i":"violin"},{"t":196.1636,"lane":2,"k":"mel","m":68,"i":"violin"},{"t":196.485,"lane":1,"k":"mel","m":64,"i":"violin"},{"t":196.5922,"lane":0,"k":"mel","m":64,"i":"violin"},{"t":197.0207,"lane":2,"k":"mel","m":62,"i":"violin"},{"t":197.4493,"lane":1,"k":"mel","m":62,"i":"violin"},{"t":197.8779,"lane":3,"k":"kick"},{"t":198.3064,"lane":0,"k":"mel","m":59,"i":"violin"},{"t":198.9493,"lane":2,"k":"mel","m":64,"i":"violin"},{"t":199.1636,"lane":1,"k":"mel","m":64,"i":"violin"},{"t":199.1636,"lane":3,"k":"snare"},{"t":199.485,"lane":0,"k":"mel","m":59,"i":"violin"},{"t":199.5922,"lane":2,"k":"mel","m":60,"i":"violin"},{"t":199.9136,"lane":1,"k":"mel","m":64,"i":"violin"},{"t":200.0207,"lane":0,"k":"mel","m":64,"i":"violin"},{"t":200.8779,"lane":2,"k":"mel","m":60,"i":"violin"},{"t":201.0922,"lane":1,"k":"mel","m":57,"i":"violin"},{"t":201.1993,"lane":0,"k":"mel","m":57,"i":"violin"},{"t":201.3064,"lane":2,"k":"mel","m":60,"i":"violin"},{"t":201.735,"lane":1,"k":"mel","m":69,"i":"violin"},{"t":202.1636,"lane":0,"k":"mel","m":68,"i":"violin"},{"t":202.3779,"lane":2,"k":"mel","m":69,"i":"violin"},{"t":202.5922,"lane":1,"k":"mel","m":69,"i":"violin"},{"t":202.5922,"lane":3,"k":"kick"},{"t":202.9136,"lane":0,"k":"mel","m":69,"i":"violin"},{"t":203.0207,"lane":2,"k":"mel","m":68,"i":"violin"},{"t":203.3422,"lane":1,"k":"mel","m":64,"i":"violin"},{"t":203.4493,"lane":0,"k":"mel","m":64,"i":"violin"},{"t":203.8779,"lane":2,"k":"mel","m":62,"i":"violin"},{"t":204.3064,"lane":1,"k":"mel","m":62,"i":"violin"},{"t":204.735,"lane":3,"k":"kick"},{"t":205.1636,"lane":0,"k":"mel","m":59,"i":"violin"},{"t":205.8064,"lane":2,"k":"mel","m":64,"i":"violin"},{"t":206.0207,"lane":1,"k":"mel","m":64,"i":"violin"},{"t":206.0207,"lane":3,"k":"snare"},{"t":206.3422,"lane":0,"k":"mel","m":59,"i":"violin"},{"t":206.4493,"lane":2,"k":"mel","m":60,"i":"violin"},{"t":206.7707,"lane":1,"k":"mel","m":64,"i":"violin"},{"t":206.8779,"lane":0,"k":"mel","m":64,"i":"violin"},{"t":207.735,"lane":2,"k":"mel","m":60,"i":"violin"},{"t":207.9493,"lane":1,"k":"mel","m":57,"i":"violin"},{"t":208.0564,"lane":0,"k":"mel","m":57,"i":"violin"},{"t":208.1636,"lane":2,"k":"mel","m":60,"i":"violin"},{"t":208.5922,"lane":1,"k":"mel","m":69,"i":"violin"},{"t":209.0207,"lane":0,"k":"mel","m":68,"i":"violin"},{"t":209.235,"lane":2,"k":"mel","m":69,"i":"violin"},{"t":209.4493,"lane":1,"k":"mel","m":69,"i":"violin"},{"t":209.4493,"lane":3,"k":"kick"},{"t":209.7707,"lane":0,"k":"mel","m":69,"i":"violin"},{"t":209.8779,"lane":2,"k":"mel","m":68,"i":"violin"},{"t":210.1993,"lane":1,"k":"mel","m":64,"i":"violin"},{"t":210.3064,"lane":0,"k":"mel","m":64,"i":"violin"},{"t":210.735,"lane":2,"k":"mel","m":62,"i":"violin"},{"t":211.1636,"lane":1,"k":"mel","m":62,"i":"violin"},{"t":211.5922,"lane":3,"k":"kick"},{"t":212.0207,"lane":0,"k":"mel","m":59,"i":"violin"},{"t":212.6636,"lane":2,"k":"mel","m":64,"i":"violin"},{"t":212.8779,"lane":1,"k":"mel","m":64,"i":"violin"},{"t":212.8779,"lane":3,"k":"snare"},{"t":213.1993,"lane":0,"k":"mel","m":59,"i":"violin"},{"t":213.3064,"lane":2,"k":"mel","m":60,"i":"violin"},{"t":213.6279,"lane":1,"k":"mel","m":64,"i":"violin"},{"t":213.735,"lane":0,"k":"mel","m":64,"i":"violin"},{"t":214.5922,"lane":2,"k":"mel","m":60,"i":"violin"},{"t":214.8064,"lane":1,"k":"mel","m":57,"i":"violin"},{"t":214.9136,"lane":0,"k":"mel","m":57,"i":"violin"},{"t":215.0207,"lane":2,"k":"mel","m":60,"i":"violin"},{"t":215.4493,"lane":1,"k":"mel","m":69,"i":"violin"},{"t":215.8779,"lane":0,"k":"mel","m":68,"i":"violin"},{"t":216.0922,"lane":2,"k":"mel","m":69,"i":"violin"},{"t":216.3064,"lane":1,"k":"mel","m":69,"i":"violin"},{"t":216.3064,"lane":3,"k":"kick"},{"t":216.6279,"lane":0,"k":"mel","m":69,"i":"violin"},{"t":216.735,"lane":2,"k":"mel","m":68,"i":"violin"},{"t":217.0564,"lane":1,"k":"mel","m":64,"i":"violin"},{"t":217.1636,"lane":0,"k":"mel","m":64,"i":"violin"},{"t":217.5922,"lane":2,"k":"mel","m":62,"i":"violin"},{"t":218.0207,"lane":1,"k":"mel","m":62,"i":"violin"},{"t":218.4493,"lane":3,"k":"kick"},{"t":218.8779,"lane":0,"k":"mel","m":59,"i":"violin"},{"t":219.5207,"lane":2,"k":"mel","m":64,"i":"violin"},{"t":219.735,"lane":1,"k":"mel","m":64,"i":"violin"},{"t":219.735,"lane":3,"k":"snare"},{"t":220.0564,"lane":0,"k":"mel","m":59,"i":"violin"},{"t":220.1636,"lane":2,"k":"mel","m":60,"i":"violin"},{"t":220.485,"lane":1,"k":"mel","m":64,"i":"violin"},{"t":220.5922,"lane":0,"k":"mel","m":64,"i":"violin"},{"t":221.4493,"lane":2,"k":"mel","m":60,"i":"violin"},{"t":221.6636,"lane":1,"k":"mel","m":57,"i":"violin"},{"t":221.7707,"lane":0,"k":"mel","m":57,"i":"violin"},{"t":221.8779,"lane":2,"k":"mel","m":60,"i":"violin"},{"t":222.3064,"lane":1,"k":"mel","m":69,"i":"violin"},{"t":222.735,"lane":0,"k":"mel","m":68,"i":"violin"},{"t":222.9493,"lane":2,"k":"mel","m":69,"i":"violin"},{"t":223.5922,"lane":3,"k":"snare"},{"t":225.3064,"lane":0,"k":"mel","m":60,"i":"violin"},{"t":225.9493,"lane":2,"k":"mel","m":66,"i":"violin"},{"t":227.235,"lane":1,"k":"mel","m":67,"i":"violin"},{"t":227.8779,"lane":0,"k":"mel","m":64,"i":"violin"},{"t":228.3064,"lane":1,"k":"mel","m":66,"i":"piano"},{"t":228.3064,"lane":3,"k":"kick"},{"t":228.735,"lane":3,"k":"kick"},{"t":229.1636,"lane":3,"k":"kick"},{"t":229.5922,"lane":2,"k":"mel","m":72,"i":"piano"},{"t":230.0207,"lane":1,"k":"mel","m":71,"i":"piano"},{"t":230.0207,"lane":3,"k":"kick"},{"t":230.235,"lane":3,"k":"kick"},{"t":230.4493,"lane":0,"k":"mel","m":67,"i":"piano"},{"t":230.6636,"lane":3,"k":"kick"},{"t":230.8779,"lane":2,"k":"mel","m":64,"i":"piano"},{"t":231.3064,"lane":1,"k":"mel","m":64,"i":"piano"},{"t":231.5207,"lane":3,"k":"kick"},{"t":231.735,"lane":3,"k":"kick"},{"t":231.9493,"lane":3,"k":"kick"},{"t":232.5922,"lane":3,"k":"kick"},{"t":233.235,"lane":0,"k":"mel","m":66,"i":"piano"},{"t":233.4493,"lane":1,"k":"mel","m":66,"i":"piano"},{"t":233.6636,"lane":3,"k":"kick"},{"t":234.0922,"lane":3,"k":"kick"},{"t":234.3064,"lane":3,"k":"kick"},{"t":234.9493,"lane":1,"k":"mel","m":66,"i":"piano"},{"t":235.1636,"lane":3,"k":"kick"},{"t":235.5922,"lane":3,"k":"kick"},{"t":235.8064,"lane":1,"k":"mel","m":66,"i":"piano"},{"t":236.0207,"lane":3,"k":"kick"},{"t":236.6636,"lane":3,"k":"kick"},{"t":236.8779,"lane":3,"k":"kick"},{"t":237.0922,"lane":3,"k":"kick"},{"t":237.3064,"lane":0,"k":"mel","m":60,"i":"piano"},{"t":237.735,"lane":1,"k":"mel","m":64,"i":"piano"},{"t":238.1636,"lane":2,"k":"mel","m":71,"i":"piano"},{"t":238.3779,"lane":0,"k":"mel","m":71,"i":"piano"},{"t":238.5922,"lane":1,"k":"mel","m":66,"i":"piano"},{"t":238.5922,"lane":3,"k":"kick"},{"t":238.8064,"lane":3,"k":"kick"},{"t":239.0207,"lane":2,"k":"mel","m":66,"i":"piano"},{"t":239.4493,"lane":0,"k":"mel","m":67,"i":"piano"},{"t":240.0922,"lane":0,"k":"mel","m":62,"i":"piano"},{"t":240.9493,"lane":0,"k":"mel","m":59,"i":"piano"},{"t":241.1636,"lane":1,"k":"mel","m":64,"i":"piano"},{"t":241.5922,"lane":2,"k":"mel","m":64,"i":"piano"},{"t":242.0207,"lane":0,"k":"mel","m":66,"i":"piano"},{"t":242.0207,"lane":3,"k":"kick"},{"t":242.4493,"lane":1,"k":"mel","m":66,"i":"piano"},{"t":242.6636,"lane":3,"k":"kick"},{"t":242.8779,"lane":3,"k":"kick"},{"t":243.3064,"lane":2,"k":"mel","m":66,"i":"piano"},{"t":243.735,"lane":2,"k":"mel","m":66,"i":"piano"},{"t":243.735,"lane":3,"k":"kick"},{"t":243.9493,"lane":3,"k":"kick"},{"t":244.1636,"lane":3,"k":"kick"},{"t":244.3779,"lane":3,"k":"kick"},{"t":244.5922,"lane":0,"k":"mel","m":62,"i":"piano"},{"t":245.0207,"lane":1,"k":"mel","m":64,"i":"piano"},{"t":245.235,"lane":3,"k":"kick"},{"t":245.4493,"lane":3,"k":"kick"},{"t":245.6636,"lane":3,"k":"kick"},{"t":246.0922,"lane":0,"k":"mel","m":62,"i":"piano"},{"t":246.3064,"lane":3,"k":"kick"},{"t":247.3779,"lane":0,"k":"mel","m":62,"i":"piano"},{"t":248.0207,"lane":0,"k":"mel","m":62,"i":"piano"},{"t":248.6636,"lane":2,"k":"mel","m":66,"i":"piano"},{"t":248.8779,"lane":3,"k":"kick"},{"t":249.3064,"lane":3,"k":"kick"},{"t":249.5207,"lane":3,"k":"kick"},{"t":249.735,"lane":0,"k":"mel","m":62,"i":"piano"},{"t":250.1636,"lane":1,"k":"mel","m":62,"i":"piano"},{"t":250.3779,"lane":3,"k":"kick"},{"t":250.5922,"lane":2,"k":"mel","m":66,"i":"piano"},{"t":250.5922,"lane":3,"k":"kick"},{"t":251.0207,"lane":0,"k":"mel","m":66,"i":"piano"},{"t":251.4493,"lane":1,"k":"mel","m":67,"i":"piano"},{"t":252.0922,"lane":3,"k":"kick"},{"t":252.3064,"lane":2,"k":"mel","m":67,"i":"piano"},{"t":252.5207,"lane":3,"k":"kick"},{"t":252.9493,"lane":3,"k":"kick"},{"t":254.235,"lane":3,"k":"kick"},{"t":254.8779,"lane":3,"k":"kick"},{"t":255.5207,"lane":2,"k":"mel","m":67,"i":"piano"},{"t":255.9493,"lane":1,"k":"mel","m":66,"i":"piano"},{"t":256.3779,"lane":0,"k":"mel","m":67,"i":"piano"},{"t":256.8064,"lane":2,"k":"mel","m":62,"i":"piano"},{"t":257.235,"lane":3,"k":"kick"},{"t":257.4493,"lane":2,"k":"mel","m":66,"i":"piano"},{"t":257.4493,"lane":3,"k":"snare"},{"t":258.3064,"lane":3,"k":"kick"},{"t":259.1636,"lane":3,"k":"kick"},{"t":259.5922,"lane":2,"k":"mel","m":67,"i":"piano"},{"t":261.3064,"lane":0,"k":"mel","m":67,"i":"piano"},{"t":261.735,"lane":1,"k":"mel","m":64,"i":"piano"},{"t":262.1636,"lane":2,"k":"mel","m":64,"i":"piano"},{"t":262.3779,"lane":0,"k":"mel","m":67,"i":"piano"},{"t":262.5922,"lane":1,"k":"mel","m":67,"i":"piano"},{"t":262.5922,"lane":3,"k":"kick"},{"t":263.0207,"lane":2,"k":"mel","m":66,"i":"piano"},{"t":263.235,"lane":0,"k":"mel","m":67,"i":"piano"},{"t":263.4493,"lane":1,"k":"mel","m":69,"i":"piano"},{"t":263.8779,"lane":2,"k":"mel","m":62,"i":"piano"},{"t":264.3064,"lane":0,"k":"mel","m":62,"i":"piano"},{"t":264.3064,"lane":3,"k":"snare"},{"t":264.5207,"lane":3,"k":"kick"},{"t":264.735,"lane":1,"k":"mel","m":66,"i":"piano"},{"t":264.9493,"lane":3,"k":"snare"},{"t":265.1636,"lane":2,"k":"mel","m":66,"i":"piano"},{"t":265.5922,"lane":0,"k":"mel","m":66,"i":"piano"},{"t":265.8064,"lane":1,"k":"mel","m":67,"i":"piano"},{"t":266.0207,"lane":2,"k":"mel","m":67,"i":"piano"},{"t":266.0207,"lane":3,"k":"kick"},{"t":266.235,"lane":0,"k":"mel","m":71,"i":"piano"},{"t":266.4493,"lane":1,"k":"mel","m":71,"i":"piano"},{"t":266.6636,"lane":3,"k":"snare"},{"t":266.8779,"lane":2,"k":"mel","m":66,"i":"piano"},{"t":267.3064,"lane":0,"k":"mel","m":67,"i":"piano"},{"t":267.5207,"lane":3,"k":"kick"},{"t":267.735,"lane":1,"k":"mel","m":69,"i":"piano"},{"t":267.735,"lane":3,"k":"snare"},{"t":268.1636,"lane":2,"k":"mel","m":64,"i":"piano"},{"t":268.5922,"lane":0,"k":"mel","m":67,"i":"piano"},{"t":269.0207,"lane":1,"k":"mel","m":67,"i":"piano"},{"t":269.235,"lane":2,"k":"mel","m":67,"i":"piano"},{"t":269.4493,"lane":0,"k":"mel","m":67,"i":"piano"},{"t":269.4493,"lane":3,"k":"kick"},{"t":269.8779,"lane":1,"k":"mel","m":66,"i":"piano"},{"t":270.0922,"lane":2,"k":"mel","m":67,"i":"piano"},{"t":270.3064,"lane":0,"k":"mel","m":69,"i":"piano"},{"t":270.735,"lane":1,"k":"mel","m":69,"i":"piano"},{"t":271.1636,"lane":2,"k":"mel","m":66,"i":"piano"},{"t":271.1636,"lane":3,"k":"snare"},{"t":271.3779,"lane":3,"k":"kick"},{"t":271.5922,"lane":0,"k":"mel","m":66,"i":"piano"},{"t":271.8064,"lane":3,"k":"kick"},{"t":272.0207,"lane":1,"k":"mel","m":64,"i":"piano"},{"t":272.4493,"lane":2,"k":"mel","m":64,"i":"piano"},{"t":272.6636,"lane":0,"k":"mel","m":64,"i":"piano"},{"t":272.8779,"lane":1,"k":"mel","m":64,"i":"piano"},{"t":272.8779,"lane":3,"k":"kick"},{"t":273.3064,"lane":2,"k":"mel","m":67,"i":"piano"},{"t":273.9493,"lane":0,"k":"mel","m":71,"i":"piano"},{"t":274.1636,"lane":1,"k":"mel","m":71,"i":"piano"},{"t":274.485,"lane":2,"k":"mel","m":71,"i":"piano"},{"t":274.5922,"lane":0,"k":"mel","m":69,"i":"piano"},{"t":275.0207,"lane":2,"k":"mel","m":64,"i":"piano"},{"t":275.235,"lane":1,"k":"mel","m":66,"i":"piano"},{"t":275.4493,"lane":0,"k":"mel","m":67,"i":"piano"},{"t":275.6636,"lane":2,"k":"mel","m":67,"i":"piano"},{"t":276.0922,"lane":1,"k":"mel","m":67,"i":"piano"},{"t":276.3064,"lane":0,"k":"mel","m":67,"i":"piano"},{"t":276.3064,"lane":3,"k":"kick"},{"t":276.735,"lane":2,"k":"mel","m":66,"i":"piano"},{"t":276.9493,"lane":3,"k":"kick"},{"t":277.1636,"lane":1,"k":"mel","m":62,"i":"piano"},{"t":277.3779,"lane":3,"k":"kick"},{"t":277.5922,"lane":3,"k":"kick"},{"t":277.8064,"lane":0,"k":"mel","m":62,"i":"piano"},{"t":278.0207,"lane":1,"k":"mel","m":62,"i":"piano"},{"t":278.0207,"lane":3,"k":"kick"},{"t":278.4493,"lane":2,"k":"mel","m":66,"i":"piano"},{"t":278.8779,"lane":0,"k":"mel","m":66,"i":"piano"},{"t":279.0922,"lane":1,"k":"mel","m":67,"i":"piano"},{"t":279.3064,"lane":3,"k":"snare"},{"t":279.5207,"lane":2,"k":"mel","m":67,"i":"piano"},{"t":279.735,"lane":0,"k":"mel","m":66,"i":"piano"},{"t":279.735,"lane":3,"k":"snare"},{"t":279.9493,"lane":1,"k":"mel","m":71,"i":"piano"},{"t":280.1636,"lane":2,"k":"mel","m":71,"i":"piano"},{"t":280.485,"lane":0,"k":"mel","m":64,"i":"piano"},{"t":280.5922,"lane":1,"k":"mel","m":66,"i":"piano"},{"t":281.0207,"lane":3,"k":"snare"},{"t":281.235,"lane":2,"k":"mel","m":69,"i":"piano"},{"t":281.4493,"lane":1,"k":"mel","m":69,"i":"piano"},{"t":281.4493,"lane":3,"k":"snare"},{"t":281.8779,"lane":0,"k":"mel","m":67,"i":"piano"},{"t":282.0922,"lane":2,"k":"mel","m":64,"i":"piano"},{"t":282.1993,"lane":1,"k":"mel","m":64,"i":"piano"},{"t":282.3064,"lane":0,"k":"mel","m":64,"i":"piano"},{"t":282.5207,"lane":3,"k":"kick"},{"t":282.735,"lane":3,"k":"snare"},{"t":282.9493,"lane":2,"k":"mel","m":67,"i":"piano"},{"t":283.1636,"lane":1,"k":"mel","m":67,"i":"piano"},{"t":283.1636,"lane":3,"k":"snare"},{"t":283.3779,"lane":3,"k":"snare"},{"t":283.5922,"lane":0,"k":"mel","m":66,"i":"piano"},{"t":283.8064,"lane":2,"k":"mel","m":67,"i":"piano"},{"t":283.9136,"lane":1,"k":"mel","m":67,"i":"piano"},{"t":284.0207,"lane":0,"k":"mel","m":62,"i":"piano"},{"t":284.235,"lane":3,"k":"kick"},{"t":284.4493,"lane":2,"k":"mel","m":62,"i":"piano"},{"t":284.5564,"lane":1,"k":"mel","m":62,"i":"piano"},{"t":284.6636,"lane":0,"k":"mel","m":62,"i":"piano"},{"t":284.8779,"lane":2,"k":"mel","m":62,"i":"piano"},{"t":284.8779,"lane":3,"k":"snare"},{"t":285.1993,"lane":1,"k":"mel","m":62,"i":"piano"},{"t":285.3064,"lane":0,"k":"mel","m":64,"i":"piano"},{"t":285.5207,"lane":2,"k":"mel","m":64,"i":"piano"},{"t":285.6279,"lane":1,"k":"mel","m":67,"i":"piano"},{"t":285.735,"lane":0,"k":"mel","m":64,"i":"piano"},{"t":285.9493,"lane":2,"k":"mel","m":64,"i":"piano"},{"t":286.1636,"lane":1,"k":"mel","m":64,"i":"piano"},{"t":286.2707,"lane":0,"k":"mel","m":64,"i":"piano"},{"t":286.3779,"lane":2,"k":"mel","m":64,"i":"piano"},{"t":286.5922,"lane":1,"k":"mel","m":64,"i":"piano"},{"t":286.5922,"lane":3,"k":"snare"},{"t":286.8064,"lane":0,"k":"mel","m":64,"i":"piano"},{"t":286.9136,"lane":2,"k":"mel","m":64,"i":"piano"},{"t":287.0207,"lane":1,"k":"mel","m":64,"i":"piano"},{"t":287.4493,"lane":3,"k":"kick"}]},"original":{"bpm":140.0,"offset":0.3064,"duration":288.6,"interlude":[195.73643990929705,228.30643990929704],"notes":[{"t":3.3064,"lane":3,"k":"snare"},{"t":3.735,"lane":1,"k":"mel","m":71,"i":"piano"},{"t":4.1636,"lane":3,"k":"kick"},{"t":4.5922,"lane":3,"k":"snare"},{"t":5.0207,"lane":0,"k":"mel","m":71,"i":"piano"},{"t":5.4493,"lane":1,"k":"mel","m":71,"i":"piano"},{"t":5.8779,"lane":2,"k":"mel","m":71,"i":"piano"},{"t":6.3064,"lane":0,"k":"mel","m":67,"i":"piano"},{"t":6.735,"lane":1,"k":"mel","m":71,"i":"piano"},{"t":7.1636,"lane":2,"k":"mel","m":71,"i":"piano"},{"t":7.5922,"lane":0,"k":"mel","m":71,"i":"piano"},{"t":8.0207,"lane":3,"k":"snare"},{"t":8.4493,"lane":3,"k":"kick"},{"t":8.8779,"lane":0,"k":"mel","m":69,"i":"piano"},{"t":9.1993,"lane":3,"k":"kick"},{"t":9.735,"lane":3,"k":"snare"},{"t":10.1636,"lane":2,"k":"mel","m":71,"i":"piano"},{"t":10.5922,"lane":1,"k":"mel","m":71,"i":"piano"},{"t":11.0207,"lane":0,"k":"mel","m":71,"i":"piano"},{"t":11.3422,"lane":2,"k":"mel","m":71,"i":"piano"},{"t":11.7707,"lane":1,"k":"mel","m":71,"i":"piano"},{"t":12.1993,"lane":3,"k":"kick"},{"t":12.735,"lane":3,"k":"kick"},{"t":13.1636,"lane":3,"k":"snare"},{"t":13.5922,"lane":0,"k":"mel","m":67,"i":"piano"},{"t":14.0207,"lane":1,"k":"mel","m":67,"i":"piano"},{"t":14.4493,"lane":2,"k":"mel","m":71,"i":"piano"},{"t":14.8779,"lane":0,"k":"mel","m":72,"i":"piano"},{"t":15.3064,"lane":1,"k":"mel","m":71,"i":"piano"},{"t":15.6279,"lane":2,"k":"mel","m":69,"i":"piano"},{"t":16.485,"lane":0,"k":"mel","m":66,"i":"piano"},{"t":16.5922,"lane":3,"k":"kick"},{"t":16.8064,"lane":3,"k":"kick"},{"t":17.235,"lane":0,"k":"mel","m":64,"i":"piano"},{"t":17.4493,"lane":1,"k":"mel","m":67,"i":"piano"},{"t":17.6636,"lane":3,"k":"kick"},{"t":18.1993,"lane":2,"k":"mel","m":69,"i":"piano"},{"t":18.3064,"lane":1,"k":"mel","m":67,"i":"piano"},{"t":18.5207,"lane":3,"k":"kick"},{"t":19.0564,"lane":3,"k":"kick"},{"t":19.1636,"lane":2,"k":"mel","m":69,"i":"piano"},{"t":19.3779,"lane":1,"k":"mel","m":67,"i":"piano"},{"t":19.8064,"lane":0,"k":"mel","m":66,"i":"piano"},{"t":20.0207,"lane":2,"k":"mel","m":64,"i":"piano"},{"t":20.235,"lane":3,"k":"kick"},{"t":20.6636,"lane":0,"k":"mel","m":64,"i":"piano"},{"t":20.8779,"lane":1,"k":"mel","m":67,"i":"piano"},{"t":21.0922,"lane":3,"k":"kick"},{"t":21.5207,"lane":1,"k":"mel","m":67,"i":"piano"},{"t":21.735,"lane":1,"k":"mel","m":66,"i":"piano"},{"t":21.9493,"lane":3,"k":"kick"},{"t":22.3779,"lane":0,"k":"mel","m":67,"i":"piano"},{"t":22.5922,"lane":1,"k":"mel","m":66,"i":"piano"},{"t":22.8064,"lane":2,"k":"mel","m":67,"i":"piano"},{"t":23.4493,"lane":1,"k":"mel","m":67,"i":"piano"},{"t":23.7707,"lane":2,"k":"mel","m":69,"i":"piano"},{"t":24.1993,"lane":3,"k":"kick"},{"t":24.6279,"lane":3,"k":"kick"},{"t":25.0564,"lane":2,"k":"mel","m":69,"i":"piano"},{"t":25.485,"lane":3,"k":"kick"},{"t":25.8064,"lane":0,"k":"mel","m":64,"i":"piano"},{"t":26.6636,"lane":0,"k":"mel","m":64,"i":"piano"},{"t":27.0922,"lane":3,"k":"kick"},{"t":27.5207,"lane":0,"k":"mel","m":64,"i":"piano"},{"t":27.9493,"lane":3,"k":"kick"},{"t":28.3779,"lane":0,"k":"mel","m":64,"i":"piano"},{"t":28.8064,"lane":3,"k":"kick"},{"t":29.235,"lane":0,"k":"mel","m":62,"i":"piano"},{"t":30.0922,"lane":3,"k":"kick"},{"t":30.3064,"lane":0,"k":"mel","m":66,"i":"piano"},{"t":30.5207,"lane":3,"k":"kick"},{"t":30.9493,"lane":0,"k":"mel","m":64,"i":"piano"},{"t":31.2707,"lane":3,"k":"kick"},{"t":31.485,"lane":3,"k":"kick"},{"t":31.8064,"lane":0,"k":"mel","m":64,"i":"piano"},{"t":32.0207,"lane":3,"k":"kick"},{"t":32.235,"lane":0,"k":"mel","m":64,"i":"piano"},{"t":32.7707,"lane":0,"k":"mel","m":71,"i":"piano"},{"t":32.8779,"lane":1,"k":"mel","m":71,"i":"piano"},{"t":33.0922,"lane":2,"k":"mel","m":76,"i":"piano"},{"t":33.6279,"lane":2,"k":"mel","m":74,"i":"piano"},{"t":33.8422,"lane":3,"k":"kick"},{"t":34.0564,"lane":3,"k":"kick"},{"t":34.3779,"lane":3,"k":"snare"},{"t":34.5922,"lane":3,"k":"kick"},{"t":34.9136,"lane":3,"k":"kick"},{"t":35.3422,"lane":2,"k":"mel","m":69,"i":"piano"},{"t":35.5564,"lane":3,"k":"kick"},{"t":35.6636,"lane":1,"k":"mel","m":67,"i":"piano"},{"t":35.985,"lane":0,"k":"mel","m":62,"i":"piano"},{"t":36.0922,"lane":2,"k":"mel","m":62,"i":"piano"},{"t":36.3064,"lane":1,"k":"mel","m":67,"i":"piano"},{"t":36.5207,"lane":0,"k":"mel","m":69,"i":"piano"},{"t":36.9493,"lane":2,"k":"mel","m":66,"i":"piano"},{"t":37.3779,"lane":3,"k":"kick"},{"t":37.9136,"lane":3,"k":"kick"},{"t":38.235,"lane":1,"k":"mel","m":66,"i":"piano"},{"t":38.6636,"lane":2,"k":"mel","m":69,"i":"piano"},{"t":39.1993,"lane":0,"k":"mel","m":64,"i":"piano"},{"t":39.5207,"lane":3,"k":"kick"},{"t":40.3779,"lane":1,"k":"mel","m":67,"i":"piano"},{"t":40.9136,"lane":2,"k":"mel","m":69,"i":"piano"},{"t":41.3422,"lane":3,"k":"kick"},{"t":41.6636,"lane":3,"k":"kick"},{"t":42.4136,"lane":3,"k":"kick"},{"t":42.8422,"lane":1,"k":"mel","m":66,"i":"piano"},{"t":43.1636,"lane":3,"k":"kick"},{"t":43.6993,"lane":3,"k":"kick"},{"t":46.1636,"lane":1,"k":"mel","m":63,"i":"piano"},{"t":46.6993,"lane":3,"k":"kick"},{"t":47.0207,"lane":2,"k":"mel","m":62,"i":"piano"},{"t":48.3064,"lane":0,"k":"mel","m":59,"i":"piano"},{"t":48.735,"lane":3,"k":"kick"},{"t":49.6993,"lane":2,"k":"mel","m":62,"i":"piano"},{"t":50.5564,"lane":3,"k":"kick"},{"t":50.985,"lane":3,"k":"kick"},{"t":51.4136,"lane":3,"k":"kick"},{"t":52.2707,"lane":3,"k":"kick"},{"t":52.5922,"lane":0,"k":"mel","m":59,"i":"piano"},{"t":53.1279,"lane":3,"k":"kick"},{"t":53.8779,"lane":2,"k":"mel","m":71,"i":"piano"},{"t":54.3064,"lane":3,"k":"snare"},{"t":54.735,"lane":2,"k":"mel","m":71,"i":"piano"},{"t":55.1636,"lane":2,"k":"mel","m":69,"i":"piano"},{"t":55.485,"lane":3,"k":"kick"},{"t":56.0207,"lane":3,"k":"snare"},{"t":56.5564,"lane":3,"k":"kick"},{"t":56.8779,"lane":3,"k":"kick"},{"t":57.3064,"lane":0,"k":"mel","m":62,"i":"piano"},{"t":59.8779,"lane":1,"k":"mel","m":62,"i":"piano"},{"t":60.3064,"lane":3,"k":"kick"},{"t":60.735,"lane":1,"k":"mel","m":62,"i":"piano"},{"t":62.0207,"lane":0,"k":"mel","m":62,"i":"piano"},{"t":62.4493,"lane":0,"k":"mel","m":62,"i":"piano"},{"t":63.3064,"lane":0,"k":"mel","m":62,"i":"piano"},{"t":64.1636,"lane":0,"k":"mel","m":62,"i":"piano"},{"t":64.6993,"lane":3,"k":"kick"},{"t":65.1279,"lane":2,"k":"mel","m":71,"i":"piano"},{"t":65.5564,"lane":3,"k":"kick"},{"t":65.6636,"lane":2,"k":"mel","m":71,"i":"piano"},{"t":66.0922,"lane":2,"k":"mel","m":69,"i":"piano"},{"t":66.6279,"lane":0,"k":"mel","m":67,"i":"piano"},{"t":67.0564,"lane":1,"k":"mel","m":66,"i":"piano"},{"t":67.3779,"lane":2,"k":"mel","m":67,"i":"piano"},{"t":67.6993,"lane":3,"k":"kick"},{"t":68.0207,"lane":3,"k":"kick"},{"t":68.4493,"lane":0,"k":"mel","m":64,"i":"piano"},{"t":68.8779,"lane":1,"k":"mel","m":66,"i":"piano"},{"t":69.0922,"lane":2,"k":"mel","m":66,"i":"piano"},{"t":69.5207,"lane":0,"k":"mel","m":66,"i":"piano"},{"t":71.235,"lane":2,"k":"mel","m":67,"i":"piano"},{"t":71.4493,"lane":1,"k":"mel","m":64,"i":"piano"},{"t":71.6636,"lane":0,"k":"mel","m":67,"i":"piano"},{"t":71.8779,"lane":2,"k":"mel","m":64,"i":"piano"},{"t":72.1993,"lane":1,"k":"mel","m":67,"i":"piano"},{"t":72.3064,"lane":3,"k":"kick"},{"t":72.5207,"lane":0,"k":"mel","m":64,"i":"piano"},{"t":72.735,"lane":3,"k":"kick"},{"t":72.9493,"lane":3,"k":"kick"},{"t":73.1636,"lane":3,"k":"kick"},{"t":73.3779,"lane":0,"k":"mel","m":72,"i":"piano"},{"t":73.5922,"lane":1,"k":"mel","m":72,"i":"piano"},{"t":73.8064,"lane":2,"k":"mel","m":72,"i":"piano"},{"t":74.0207,"lane":0,"k":"mel","m":71,"i":"piano"},{"t":74.235,"lane":3,"k":"kick"},{"t":74.4493,"lane":1,"k":"mel","m":72,"i":"piano"},{"t":74.8779,"lane":2,"k":"mel","m":69,"i":"piano"},{"t":75.0922,"lane":0,"k":"mel","m":71,"i":"piano"},{"t":75.5207,"lane":3,"k":"kick"},{"t":76.0564,"lane":2,"k":"mel","m":69,"i":"piano"},{"t":76.485,"lane":1,"k":"mel","m":72,"i":"piano"},{"t":76.8064,"lane":0,"k":"mel","m":66,"i":"piano"},{"t":77.235,"lane":2,"k":"mel","m":66,"i":"piano"},{"t":77.6636,"lane":3,"k":"kick"},{"t":78.1993,"lane":3,"k":"kick"},{"t":78.3064,"lane":3,"k":"kick"},{"t":78.6279,"lane":3,"k":"kick"},{"t":79.0564,"lane":0,"k":"mel","m":62,"i":"piano"},{"t":79.1636,"lane":3,"k":"kick"},{"t":79.3779,"lane":0,"k":"mel","m":62,"i":"piano"},{"t":79.9136,"lane":2,"k":"mel","m":62,"i":"piano"},{"t":80.0207,"lane":3,"k":"kick"},{"t":80.235,"lane":1,"k":"mel","m":62,"i":"piano"},{"t":80.6636,"lane":0,"k":"mel","m":60,"i":"piano"},{"t":80.985,"lane":2,"k":"mel","m":60,"i":"piano"},{"t":81.0922,"lane":3,"k":"kick"},{"t":83.0207,"lane":1,"k":"mel","m":66,"i":"piano"},{"t":83.4493,"lane":3,"k":"kick"},{"t":83.6636,"lane":1,"k":"mel","m":66,"i":"piano"},{"t":84.0922,"lane":0,"k":"mel","m":62,"i":"piano"},{"t":84.9493,"lane":0,"k":"mel","m":59,"i":"piano"},{"t":85.1636,"lane":1,"k":"mel","m":64,"i":"piano"},{"t":85.485,"lane":2,"k":"mel","m":71,"i":"piano"},{"t":85.5922,"lane":0,"k":"mel","m":71,"i":"piano"},{"t":85.9136,"lane":1,"k":"mel","m":71,"i":"piano"},{"t":86.0207,"lane":3,"k":"kick"},{"t":86.235,"lane":2,"k":"mel","m":64,"i":"piano"},{"t":86.4493,"lane":3,"k":"kick"},{"t":86.7707,"lane":0,"k":"mel","m":66,"i":"piano"},{"t":86.8779,"lane":3,"k":"kick"},{"t":87.0922,"lane":1,"k":"mel","m":66,"i":"piano"},{"t":87.3064,"lane":2,"k":"mel","m":66,"i":"piano"},{"t":87.5207,"lane":3,"k":"kick"},{"t":87.8422,"lane":3,"k":"kick"},{"t":87.9493,"lane":3,"k":"kick"},{"t":88.1636,"lane":3,"k":"kick"},{"t":88.5922,"lane":0,"k":"mel","m":57,"i":"piano"},{"t":88.8064,"lane":0,"k":"mel","m":59,"i":"piano"},{"t":89.235,"lane":3,"k":"kick"},{"t":89.7707,"lane":3,"k":"kick"},{"t":90.1993,"lane":1,"k":"mel","m":62,"i":"piano"},{"t":90.6279,"lane":2,"k":"mel","m":66,"i":"piano"},{"t":91.0564,"lane":3,"k":"kick"},{"t":91.485,"lane":1,"k":"mel","m":62,"i":"piano"},{"t":91.9136,"lane":3,"k":"kick"},{"t":92.1279,"lane":3,"k":"kick"},{"t":92.235,"lane":1,"k":"mel","m":62,"i":"piano"},{"t":92.7707,"lane":0,"k":"mel","m":62,"i":"piano"},{"t":92.8779,"lane":3,"k":"kick"},{"t":93.0922,"lane":0,"k":"mel","m":62,"i":"piano"},{"t":93.6279,"lane":0,"k":"mel","m":62,"i":"piano"},{"t":93.735,"lane":3,"k":"kick"},{"t":93.9493,"lane":0,"k":"mel","m":62,"i":"piano"},{"t":94.485,"lane":0,"k":"mel","m":66,"i":"piano"},{"t":94.5922,"lane":3,"k":"kick"},{"t":94.8064,"lane":1,"k":"mel","m":66,"i":"piano"},{"t":95.0207,"lane":2,"k":"mel","m":66,"i":"piano"},{"t":96.735,"lane":2,"k":"mel","m":66,"i":"piano"},{"t":98.4493,"lane":1,"k":"mel","m":66,"i":"piano"},{"t":100.0564,"lane":3,"k":"kick"},{"t":101.985,"lane":3,"k":"kick"},{"t":103.5922,"lane":1,"k":"mel","m":67,"i":"piano"},{"t":105.1993,"lane":3,"k":"kick"},{"t":105.735,"lane":0,"k":"mel","m":64,"i":"piano"},{"t":106.1636,"lane":0,"k":"mel","m":64,"i":"piano"},{"t":106.5922,"lane":3,"k":"kick"},{"t":107.0207,"lane":3,"k":"kick"},{"t":107.4493,"lane":2,"k":"mel","m":69,"i":"piano"},{"t":107.8779,"lane":2,"k":"mel","m":69,"i":"piano"},{"t":108.3064,"lane":3,"k":"snare"},{"t":108.8422,"lane":3,"k":"kick"},{"t":109.1636,"lane":0,"k":"mel","m":66,"i":"piano"},{"t":109.6993,"lane":3,"k":"snare"},{"t":110.0207,"lane":3,"k":"snare"},{"t":110.5564,"lane":2,"k":"mel","m":71,"i":"piano"},{"t":110.985,"lane":3,"k":"kick"},{"t":111.3064,"lane":2,"k":"mel","m":71,"i":"piano"},{"t":111.735,"lane":1,"k":"mel","m":69,"i":"piano"},{"t":112.2707,"lane":3,"k":"kick"},{"t":112.5922,"lane":2,"k":"mel","m":67,"i":"piano"},{"t":113.0207,"lane":1,"k":"mel","m":67,"i":"piano"},{"t":113.4493,"lane":0,"k":"mel","m":67,"i":"piano"},{"t":113.985,"lane":2,"k":"mel","m":69,"i":"piano"},{"t":114.3064,"lane":1,"k":"mel","m":69,"i":"piano"},{"t":114.735,"lane":0,"k":"mel","m":69,"i":"piano"},{"t":115.1636,"lane":2,"k":"mel","m":66,"i":"piano"},{"t":115.5922,"lane":1,"k":"mel","m":64,"i":"piano"},{"t":116.0207,"lane":0,"k":"mel","m":64,"i":"piano"},{"t":116.4493,"lane":2,"k":"mel","m":64,"i":"piano"},{"t":116.8779,"lane":3,"k":"kick"},{"t":117.3064,"lane":0,"k":"mel","m":64,"i":"piano"},{"t":119.235,"lane":3,"k":"kick"},{"t":119.4493,"lane":2,"k":"mel","m":66,"i":"piano"},{"t":119.6636,"lane":1,"k":"mel","m":69,"i":"piano"},{"t":120.0922,"lane":0,"k":"mel","m":67,"i":"piano"},{"t":120.3064,"lane":3,"k":"kick"},{"t":120.5207,"lane":3,"k":"kick"},{"t":121.0564,"lane":2,"k":"mel","m":67,"i":"piano"},{"t":121.1636,"lane":3,"k":"kick"},{"t":121.3779,"lane":1,"k":"mel","m":64,"i":"piano"},{"t":121.9136,"lane":2,"k":"mel","m":66,"i":"piano"},{"t":122.1279,"lane":3,"k":"kick"},{"t":122.3422,"lane":3,"k":"kick"},{"t":122.7707,"lane":3,"k":"snare"},{"t":122.8779,"lane":3,"k":"kick"},{"t":123.1993,"lane":3,"k":"kick"},{"t":123.5207,"lane":0,"k":"mel","m":64,"i":"piano"},{"t":123.735,"lane":1,"k":"mel","m":66,"i":"piano"},{"t":123.9493,"lane":2,"k":"mel","m":67,"i":"piano"},{"t":124.485,"lane":2,"k":"mel","m":67,"i":"piano"},{"t":124.6993,"lane":3,"k":"kick"},{"t":124.8064,"lane":1,"k":"mel","m":62,"i":"piano"},{"t":125.1279,"lane":0,"k":"mel","m":62,"i":"piano"},{"t":125.3422,"lane":3,"k":"kick"},{"t":125.4493,"lane":2,"k":"mel","m":62,"i":"piano"},{"t":125.6636,"lane":3,"k":"kick"},{"t":126.4136,"lane":3,"k":"kick"},{"t":127.3779,"lane":3,"k":"kick"},{"t":129.5207,"lane":2,"k":"mel","m":64,"i":"piano"},{"t":130.0564,"lane":2,"k":"mel","m":64,"i":"piano"},{"t":130.3779,"lane":0,"k":"mel","m":62,"i":"piano"},{"t":130.8064,"lane":3,"k":"kick"},{"t":133.1636,"lane":0,"k":"mel","m":62,"i":"piano"},{"t":133.3779,"lane":3,"k":"kick"},{"t":133.5922,"lane":3,"k":"kick"},{"t":133.8064,"lane":2,"k":"mel","m":62,"i":"piano"},{"t":134.0207,"lane":1,"k":"mel","m":64,"i":"piano"},{"t":134.235,"lane":0,"k":"mel","m":62,"i":"piano"},{"t":134.4493,"lane":2,"k":"mel","m":62,"i":"piano"},{"t":134.6636,"lane":1,"k":"mel","m":62,"i":"piano"},{"t":134.8779,"lane":3,"k":"kick"},{"t":135.0922,"lane":3,"k":"kick"},{"t":135.3064,"lane":2,"k":"mel","m":62,"i":"piano"},{"t":136.3779,"lane":2,"k":"mel","m":62,"i":"piano"},{"t":136.5922,"lane":1,"k":"mel","m":62,"i":"piano"},{"t":136.8064,"lane":0,"k":"mel","m":62,"i":"piano"},{"t":137.0207,"lane":2,"k":"mel","m":62,"i":"piano"},{"t":137.235,"lane":1,"k":"mel","m":60,"i":"piano"},{"t":137.4493,"lane":0,"k":"mel","m":59,"i":"piano"},{"t":137.6636,"lane":2,"k":"mel","m":59,"i":"piano"},{"t":137.8779,"lane":1,"k":"mel","m":62,"i":"piano"},{"t":138.0922,"lane":0,"k":"mel","m":62,"i":"piano"},{"t":138.3064,"lane":2,"k":"mel","m":62,"i":"piano"},{"t":138.5207,"lane":3,"k":"kick"},{"t":138.735,"lane":3,"k":"kick"},{"t":139.5922,"lane":3,"k":"kick"},{"t":140.0207,"lane":2,"k":"mel","m":72,"i":"piano"},{"t":140.4493,"lane":2,"k":"mel","m":71,"i":"piano"},{"t":140.985,"lane":3,"k":"kick"},{"t":141.1993,"lane":1,"k":"mel","m":67,"i":"piano"},{"t":141.6279,"lane":3,"k":"kick"},{"t":141.9493,"lane":3,"k":"kick"},{"t":143.0207,"lane":2,"k":"mel","m":71,"i":"piano"},{"t":143.4493,"lane":1,"k":"mel","m":71,"i":"piano"},{"t":143.8779,"lane":0,"k":"mel","m":69,"i":"piano"},{"t":144.3064,"lane":2,"k":"mel","m":69,"i":"piano"},{"t":144.5207,"lane":3,"k":"kick"},{"t":145.1636,"lane":1,"k":"mel","m":67,"i":"piano"},{"t":145.5922,"lane":3,"k":"kick"},{"t":146.0207,"lane":3,"k":"kick"},{"t":146.5564,"lane":3,"k":"kick"},{"t":146.8779,"lane":3,"k":"kick"},{"t":147.0922,"lane":2,"k":"mel","m":62,"i":"piano"},{"t":147.3064,"lane":3,"k":"kick"},{"t":147.5207,"lane":1,"k":"mel","m":62,"i":"piano"},{"t":147.735,"lane":0,"k":"mel","m":62,"i":"piano"},{"t":147.9493,"lane":2,"k":"mel","m":62,"i":"piano"},{"t":148.1636,"lane":3,"k":"kick"},{"t":148.3779,"lane":1,"k":"mel","m":62,"i":"piano"},{"t":148.5922,"lane":0,"k":"mel","m":62,"i":"piano"},{"t":148.8064,"lane":2,"k":"mel","m":62,"i":"piano"},{"t":149.0207,"lane":1,"k":"mel","m":62,"i":"piano"},{"t":150.0922,"lane":2,"k":"mel","m":62,"i":"piano"},{"t":150.3064,"lane":1,"k":"mel","m":62,"i":"piano"},{"t":150.5207,"lane":0,"k":"mel","m":62,"i":"piano"},{"t":150.735,"lane":2,"k":"mel","m":62,"i":"piano"},{"t":150.9493,"lane":3,"k":"kick"},{"t":151.1636,"lane":1,"k":"mel","m":59,"i":"piano"},{"t":151.3779,"lane":3,"k":"kick"},{"t":151.5922,"lane":0,"k":"mel","m":62,"i":"piano"},{"t":151.8064,"lane":2,"k":"mel","m":62,"i":"piano"},{"t":152.0207,"lane":1,"k":"mel","m":62,"i":"piano"},{"t":152.3422,"lane":0,"k":"mel","m":62,"i":"piano"},{"t":152.4493,"lane":2,"k":"mel","m":62,"i":"piano"},{"t":153.3064,"lane":3,"k":"snare"},{"t":153.735,"lane":0,"k":"mel","m":59,"i":"piano"},{"t":154.1636,"lane":0,"k":"mel","m":59,"i":"piano"},{"t":154.5922,"lane":3,"k":"kick"},{"t":155.1279,"lane":0,"k":"mel","m":59,"i":"piano"},{"t":155.4493,"lane":3,"k":"kick"},{"t":155.985,"lane":3,"k":"kick"},{"t":156.4136,"lane":2,"k":"mel","m":62,"i":"piano"},{"t":157.1636,"lane":3,"k":"kick"},{"t":158.0207,"lane":1,"k":"mel","m":62,"i":"piano"},{"t":158.8779,"lane":1,"k":"mel","m":62,"i":"piano"},{"t":159.735,"lane":1,"k":"mel","m":62,"i":"piano"},{"t":160.3779,"lane":0,"k":"mel","m":59,"i":"piano"},{"t":160.6993,"lane":3,"k":"kick"},{"t":160.8064,"lane":1,"k":"mel","m":67,"i":"piano"},{"t":161.0207,"lane":2,"k":"mel","m":71,"i":"piano"},{"t":161.235,"lane":0,"k":"mel","m":67,"i":"piano"},{"t":161.4493,"lane":1,"k":"mel","m":66,"i":"piano"},{"t":161.6636,"lane":2,"k":"mel","m":64,"i":"piano"},{"t":161.985,"lane":3,"k":"kick"},{"t":162.0922,"lane":3,"k":"snare"},{"t":162.3064,"lane":3,"k":"kick"},{"t":162.6279,"lane":0,"k":"mel","m":59,"i":"piano"},{"t":162.735,"lane":1,"k":"mel","m":66,"i":"piano"},{"t":162.9493,"lane":3,"k":"kick"},{"t":163.1636,"lane":2,"k":"mel","m":66,"i":"piano"},{"t":163.3779,"lane":3,"k":"kick"},{"t":163.5922,"lane":3,"k":"kick"},{"t":164.0207,"lane":0,"k":"mel","m":69,"i":"piano"},{"t":164.3422,"lane":1,"k":"mel","m":71,"i":"piano"},{"t":164.6636,"lane":2,"k":"mel","m":71,"i":"piano"},{"t":165.0922,"lane":3,"k":"kick"},{"t":165.5207,"lane":2,"k":"mel","m":69,"i":"piano"},{"t":165.9493,"lane":1,"k":"mel","m":67,"i":"piano"},{"t":166.3779,"lane":3,"k":"kick"},{"t":166.9136,"lane":3,"k":"kick"},{"t":167.235,"lane":1,"k":"mel","m":66,"i":"piano"},{"t":167.4493,"lane":3,"k":"kick"},{"t":167.7707,"lane":3,"k":"kick"},{"t":168.0922,"lane":1,"k":"mel","m":66,"i":"piano"},{"t":168.3064,"lane":3,"k":"kick"},{"t":168.5207,"lane":0,"k":"mel","m":62,"i":"piano"},{"t":169.0564,"lane":3,"k":"kick"},{"t":169.2707,"lane":0,"k":"mel","m":62,"i":"piano"},{"t":169.3779,"lane":0,"k":"mel","m":62,"i":"piano"},{"t":169.9136,"lane":0,"k":"mel","m":60,"i":"piano"},{"t":170.3422,"lane":3,"k":"kick"},{"t":171.6279,"lane":0,"k":"mel","m":59,"i":"piano"},{"t":172.1636,"lane":2,"k":"mel","m":66,"i":"piano"},{"t":172.5922,"lane":3,"k":"kick"},{"t":172.8064,"lane":2,"k":"mel","m":66,"i":"piano"},{"t":173.235,"lane":1,"k":"mel","m":62,"i":"piano"},{"t":174.0922,"lane":0,"k":"mel","m":59,"i":"piano"},{"t":174.3064,"lane":1,"k":"mel","m":64,"i":"piano"},{"t":174.5207,"lane":2,"k":"mel","m":66,"i":"piano"},{"t":174.735,"lane":0,"k":"mel","m":64,"i":"piano"},{"t":175.0564,"lane":3,"k":"kick"},{"t":175.2707,"lane":3,"k":"kick"},{"t":175.3779,"lane":2,"k":"mel","m":64,"i":"piano"},{"t":175.5922,"lane":3,"k":"kick"},{"t":175.8064,"lane":3,"k":"kick"},{"t":176.0207,"lane":3,"k":"kick"},{"t":176.235,"lane":3,"k":"kick"},{"t":176.4493,"lane":0,"k":"mel","m":59,"i":"piano"},{"t":176.7707,"lane":1,"k":"mel","m":57,"i":"piano"},{"t":176.8779,"lane":3,"k":"kick"},{"t":177.1993,"lane":2,"k":"mel","m":59,"i":"piano"},{"t":177.4136,"lane":0,"k":"mel","m":59,"i":"piano"},{"t":177.8422,"lane":3,"k":"kick"},{"t":178.0564,"lane":0,"k":"mel","m":59,"i":"piano"},{"t":178.485,"lane":1,"k":"mel","m":59,"i":"piano"},{"t":178.9136,"lane":2,"k":"mel","m":62,"i":"piano"},{"t":179.3422,"lane":0,"k":"mel","m":62,"i":"piano"},{"t":179.6636,"lane":1,"k":"mel","m":62,"i":"piano"},{"t":180.1993,"lane":3,"k":"kick"},{"t":180.6279,"lane":2,"k":"mel","m":67,"i":"piano"},{"t":181.0564,"lane":1,"k":"mel","m":66,"i":"piano"},{"t":181.2707,"lane":3,"k":"kick"},{"t":181.3779,"lane":0,"k":"mel","m":62,"i":"piano"},{"t":181.8064,"lane":2,"k":"mel","m":62,"i":"piano"},{"t":182.1279,"lane":1,"k":"mel","m":62,"i":"piano"},{"t":182.235,"lane":0,"k":"mel","m":62,"i":"piano"},{"t":182.7707,"lane":3,"k":"kick"},{"t":182.8779,"lane":3,"k":"kick"},{"t":183.0922,"lane":0,"k":"mel","m":62,"i":"piano"},{"t":183.5207,"lane":3,"k":"kick"},{"t":184.0564,"lane":2,"k":"mel","m":66,"i":"piano"},{"t":184.2707,"lane":3,"k":"kick"},{"t":184.9136,"lane":2,"k":"mel","m":67,"i":"piano"},{"t":185.3422,"lane":1,"k":"mel","m":67,"i":"piano"},{"t":185.7707,"lane":0,"k":"mel","m":66,"i":"piano"},{"t":186.1993,"lane":3,"k":"kick"},{"t":186.6279,"lane":0,"k":"mel","m":62,"i":"piano"},{"t":187.6993,"lane":1,"k":"mel","m":66,"i":"piano"},{"t":188.1279,"lane":3,"k":"kick"},{"t":188.3422,"lane":1,"k":"mel","m":66,"i":"piano"},{"t":188.6636,"lane":2,"k":"mel","m":67,"i":"piano"},{"t":189.1993,"lane":3,"k":"kick"},{"t":189.6279,"lane":3,"k":"kick"},{"t":189.9493,"lane":3,"k":"kick"},{"t":190.5922,"lane":3,"k":"snare"},{"t":190.9136,"lane":0,"k":"mel","m":67,"i":"piano"},{"t":192.6279,"lane":3,"k":"kick"},{"t":194.4493,"lane":2,"k":"mel","m":72,"i":"piano"},{"t":194.8779,"lane":1,"k":"mel","m":69,"i":"piano"},{"t":195.3064,"lane":0,"k":"mel","m":68,"i":"piano"},{"t":195.735,"lane":2,"k":"mel","m":69,"i":"violin"},{"t":196.1636,"lane":1,"k":"mel","m":68,"i":"violin"},{"t":196.5922,"lane":0,"k":"mel","m":64,"i":"violin"},{"t":197.0207,"lane":2,"k":"mel","m":62,"i":"violin"},{"t":197.4493,"lane":1,"k":"mel","m":64,"i":"violin"},{"t":197.8779,"lane":3,"k":"kick"},{"t":198.3064,"lane":2,"k":"mel","m":64,"i":"violin"},{"t":198.735,"lane":1,"k":"mel","m":60,"i":"violin"},{"t":199.1636,"lane":0,"k":"mel","m":59,"i":"violin"},{"t":199.5922,"lane":2,"k":"mel","m":60,"i":"violin"},{"t":200.0207,"lane":3,"k":"snare"},{"t":200.4493,"lane":0,"k":"mel","m":59,"i":"violin"},{"t":201.1993,"lane":0,"k":"mel","m":57,"i":"violin"},{"t":201.3064,"lane":1,"k":"mel","m":60,"i":"violin"},{"t":201.6279,"lane":2,"k":"mel","m":69,"i":"violin"},{"t":202.0564,"lane":0,"k":"mel","m":71,"i":"violin"},{"t":202.2707,"lane":1,"k":"mel","m":69,"i":"violin"},{"t":202.5922,"lane":2,"k":"mel","m":69,"i":"violin"},{"t":202.8064,"lane":3,"k":"kick"},{"t":203.0207,"lane":0,"k":"mel","m":68,"i":"violin"},{"t":203.4493,"lane":1,"k":"mel","m":64,"i":"violin"},{"t":203.6636,"lane":2,"k":"mel","m":65,"i":"violin"},{"t":203.985,"lane":3,"k":"kick"},{"t":204.3064,"lane":2,"k":"mel","m":64,"i":"violin"},{"t":204.5207,"lane":1,"k":"mel","m":60,"i":"violin"},{"t":204.735,"lane":0,"k":"mel","m":59,"i":"violin"},{"t":205.1636,"lane":2,"k":"mel","m":59,"i":"violin"},{"t":205.6993,"lane":0,"k":"mel","m":60,"i":"violin"},{"t":208.1636,"lane":2,"k":"mel","m":72,"i":"violin"},{"t":208.2707,"lane":3,"k":"kick"},{"t":208.5922,"lane":1,"k":"mel","m":69,"i":"violin"},{"t":208.6993,"lane":3,"k":"kick"},{"t":209.0207,"lane":0,"k":"mel","m":68,"i":"violin"},{"t":209.4493,"lane":2,"k":"mel","m":69,"i":"violin"},{"t":209.6636,"lane":1,"k":"mel","m":65,"i":"violin"},{"t":209.985,"lane":3,"k":"kick"},{"t":210.3064,"lane":0,"k":"mel","m":64,"i":"violin"},{"t":210.6279,"lane":3,"k":"kick"},{"t":210.8422,"lane":0,"k":"mel","m":62,"i":"violin"},{"t":211.1636,"lane":1,"k":"mel","m":64,"i":"violin"},{"t":211.3779,"lane":2,"k":"mel","m":72,"i":"violin"},{"t":211.5922,"lane":0,"k":"mel","m":71,"i":"violin"},{"t":214.8064,"lane":2,"k":"mel","m":72,"i":"violin"},{"t":215.0207,"lane":1,"k":"mel","m":72,"i":"violin"},{"t":215.1279,"lane":3,"k":"kick"},{"t":215.4493,"lane":0,"k":"mel","m":69,"i":"violin"},{"t":215.6636,"lane":3,"k":"snare"},{"t":215.8779,"lane":2,"k":"mel","m":69,"i":"violin"},{"t":216.3064,"lane":1,"k":"mel","m":69,"i":"violin"},{"t":216.4136,"lane":0,"k":"mel","m":65,"i":"violin"},{"t":216.735,"lane":2,"k":"mel","m":64,"i":"violin"},{"t":217.0564,"lane":1,"k":"mel","m":64,"i":"violin"},{"t":217.485,"lane":3,"k":"kick"},{"t":217.6993,"lane":3,"k":"kick"},{"t":218.0207,"lane":0,"k":"mel","m":64,"i":"violin"},{"t":218.235,"lane":3,"k":"snare"},{"t":218.4493,"lane":3,"k":"kick"},{"t":219.3064,"lane":0,"k":"mel","m":64,"i":"violin"},{"t":219.735,"lane":1,"k":"mel","m":64,"i":"violin"},{"t":220.1636,"lane":3,"k":"kick"},{"t":221.3422,"lane":3,"k":"kick"},{"t":221.7707,"lane":1,"k":"mel","m":62,"i":"violin"},{"t":222.0922,"lane":3,"k":"kick"},{"t":222.735,"lane":0,"k":"mel","m":59,"i":"violin"},{"t":223.0564,"lane":1,"k":"mel","m":64,"i":"violin"},{"t":223.3779,"lane":3,"k":"kick"},{"t":223.9136,"lane":3,"k":"kick"},{"t":224.0207,"lane":0,"k":"mel","m":59,"i":"violin"},{"t":224.1279,"lane":1,"k":"mel","m":59,"i":"violin"},{"t":224.235,"lane":2,"k":"mel","m":66,"i":"violin"},{"t":224.3422,"lane":3,"k":"kick"},{"t":224.4493,"lane":0,"k":"mel","m":66,"i":"violin"},{"t":224.8779,"lane":3,"k":"kick"},{"t":225.4136,"lane":3,"k":"kick"},{"t":226.1636,"lane":3,"k":"kick"},{"t":226.485,"lane":2,"k":"mel","m":69,"i":"violin"},{"t":226.6993,"lane":3,"k":"kick"},{"t":226.8064,"lane":3,"k":"kick"},{"t":227.235,"lane":0,"k":"mel","m":67,"i":"violin"},{"t":227.4493,"lane":1,"k":"mel","m":64,"i":"violin"},{"t":227.6636,"lane":2,"k":"mel","m":67,"i":"violin"},{"t":227.8779,"lane":3,"k":"kick"},{"t":228.0922,"lane":0,"k":"mel","m":67,"i":"violin"},{"t":228.3064,"lane":1,"k":"mel","m":66,"i":"piano"},{"t":228.6279,"lane":3,"k":"kick"},{"t":228.8422,"lane":3,"k":"kick"},{"t":229.0564,"lane":3,"k":"kick"},{"t":229.2707,"lane":2,"k":"mel","m":71,"i":"piano"},{"t":229.485,"lane":3,"k":"kick"},{"t":229.5922,"lane":1,"k":"mel","m":71,"i":"piano"},{"t":229.8064,"lane":3,"k":"kick"},{"t":230.0207,"lane":0,"k":"mel","m":71,"i":"piano"},{"t":230.235,"lane":2,"k":"mel","m":71,"i":"piano"},{"t":230.5564,"lane":3,"k":"kick"},{"t":230.8779,"lane":2,"k":"mel","m":69,"i":"piano"},{"t":231.0922,"lane":1,"k":"mel","m":71,"i":"piano"},{"t":231.5207,"lane":0,"k":"mel","m":66,"i":"piano"},{"t":232.0564,"lane":3,"k":"kick"},{"t":232.485,"lane":3,"k":"kick"},{"t":232.9136,"lane":3,"k":"kick"},{"t":233.3422,"lane":3,"k":"kick"},{"t":233.6636,"lane":3,"k":"kick"},{"t":234.1993,"lane":1,"k":"mel","m":66,"i":"piano"},{"t":234.4136,"lane":3,"k":"kick"},{"t":234.5207,"lane":1,"k":"mel","m":67,"i":"piano"},{"t":234.9493,"lane":3,"k":"kick"},{"t":235.1636,"lane":2,"k":"mel","m":67,"i":"piano"},{"t":235.485,"lane":1,"k":"mel","m":62,"i":"piano"},{"t":235.9136,"lane":0,"k":"mel","m":62,"i":"piano"},{"t":236.1279,"lane":3,"k":"kick"},{"t":236.235,"lane":2,"k":"mel","m":62,"i":"piano"},{"t":236.7707,"lane":3,"k":"kick"},{"t":236.985,"lane":3,"k":"kick"},{"t":237.0922,"lane":3,"k":"kick"},{"t":239.0207,"lane":2,"k":"mel","m":66,"i":"piano"},{"t":239.4493,"lane":2,"k":"mel","m":67,"i":"piano"},{"t":239.6636,"lane":3,"k":"kick"},{"t":240.0922,"lane":0,"k":"mel","m":62,"i":"piano"},{"t":240.9493,"lane":0,"k":"mel","m":59,"i":"piano"},{"t":241.1636,"lane":3,"k":"kick"},{"t":241.3779,"lane":1,"k":"mel","m":60,"i":"piano"},{"t":241.5922,"lane":2,"k":"mel","m":64,"i":"piano"},{"t":241.9136,"lane":0,"k":"mel","m":67,"i":"piano"},{"t":242.0207,"lane":3,"k":"kick"},{"t":242.3422,"lane":1,"k":"mel","m":64,"i":"piano"},{"t":242.5564,"lane":2,"k":"mel","m":64,"i":"piano"},{"t":242.6636,"lane":0,"k":"mel","m":60,"i":"piano"},{"t":242.8779,"lane":3,"k":"kick"},{"t":243.0922,"lane":1,"k":"mel","m":60,"i":"piano"},{"t":243.3064,"lane":2,"k":"mel","m":66,"i":"piano"},{"t":243.5207,"lane":3,"k":"kick"},{"t":243.735,"lane":0,"k":"mel","m":66,"i":"piano"},{"t":244.0564,"lane":1,"k":"mel","m":71,"i":"piano"},{"t":244.2707,"lane":2,"k":"mel","m":64,"i":"piano"},{"t":244.6993,"lane":0,"k":"mel","m":64,"i":"piano"},{"t":244.9136,"lane":1,"k":"mel","m":59,"i":"piano"},{"t":245.235,"lane":3,"k":"kick"},{"t":245.7707,"lane":3,"k":"kick"},{"t":246.0922,"lane":0,"k":"mel","m":60,"i":"piano"},{"t":246.5207,"lane":3,"k":"snare"},{"t":247.0564,"lane":3,"k":"kick"},{"t":247.3779,"lane":0,"k":"mel","m":62,"i":"piano"},{"t":247.8064,"lane":0,"k":"mel","m":62,"i":"piano"},{"t":248.0207,"lane":3,"k":"kick"},{"t":248.3422,"lane":0,"k":"mel","m":62,"i":"piano"},{"t":248.6636,"lane":1,"k":"mel","m":66,"i":"piano"},{"t":248.8779,"lane":3,"k":"kick"},{"t":249.0922,"lane":2,"k":"mel","m":62,"i":"piano"},{"t":249.5207,"lane":3,"k":"kick"},{"t":249.735,"lane":3,"k":"kick"},{"t":249.9493,"lane":0,"k":"mel","m":62,"i":"piano"},{"t":250.3779,"lane":3,"k":"kick"},{"t":250.6993,"lane":2,"k":"mel","m":66,"i":"piano"},{"t":250.8064,"lane":3,"k":"kick"},{"t":251.0207,"lane":1,"k":"mel","m":64,"i":"piano"},{"t":251.5564,"lane":3,"k":"kick"},{"t":251.7707,"lane":2,"k":"mel","m":66,"i":"piano"},{"t":252.0922,"lane":3,"k":"kick"},{"t":252.5207,"lane":2,"k":"mel","m":66,"i":"piano"},{"t":252.9493,"lane":1,"k":"mel","m":67,"i":"piano"},{"t":253.3779,"lane":0,"k":"mel","m":62,"i":"piano"},{"t":253.8064,"lane":2,"k":"mel","m":62,"i":"piano"},{"t":254.5564,"lane":2,"k":"mel","m":66,"i":"piano"},{"t":254.985,"lane":3,"k":"kick"},{"t":255.0922,"lane":2,"k":"mel","m":66,"i":"piano"},{"t":255.5207,"lane":2,"k":"mel","m":67,"i":"piano"},{"t":256.0564,"lane":3,"k":"kick"},{"t":256.3779,"lane":2,"k":"mel","m":67,"i":"piano"},{"t":256.6993,"lane":2,"k":"mel","m":67,"i":"piano"},{"t":256.8064,"lane":3,"k":"kick"},{"t":257.4493,"lane":2,"k":"mel","m":66,"i":"piano"},{"t":257.7707,"lane":0,"k":"mel","m":64,"i":"piano"},{"t":259.485,"lane":3,"k":"kick"},{"t":261.4136,"lane":3,"k":"kick"},{"t":261.5207,"lane":0,"k":"mel","m":66,"i":"piano"},{"t":261.735,"lane":3,"k":"kick"},{"t":261.9493,"lane":1,"k":"mel","m":67,"i":"piano"},{"t":262.3779,"lane":2,"k":"mel","m":67,"i":"piano"},{"t":262.8064,"lane":0,"k":"mel","m":66,"i":"piano"},{"t":263.3422,"lane":3,"k":"kick"},{"t":263.5564,"lane":3,"k":"kick"},{"t":263.7707,"lane":0,"k":"mel","m":62,"i":"piano"},{"t":264.8422,"lane":0,"k":"mel","m":67,"i":"piano"},{"t":265.0564,"lane":3,"k":"kick"},{"t":265.2707,"lane":1,"k":"mel","m":67,"i":"piano"},{"t":265.485,"lane":2,"k":"mel","m":67,"i":"piano"},{"t":265.9136,"lane":3,"k":"kick"},{"t":266.1279,"lane":2,"k":"mel","m":69,"i":"piano"},{"t":266.3422,"lane":3,"k":"kick"},{"t":268.2707,"lane":3,"k":"kick"},{"t":268.3779,"lane":0,"k":"mel","m":67,"i":"piano"},{"t":268.5922,"lane":1,"k":"mel","m":64,"i":"piano"},{"t":268.8064,"lane":2,"k":"mel","m":67,"i":"piano"},{"t":269.235,"lane":0,"k":"mel","m":67,"i":"piano"},{"t":269.7707,"lane":3,"k":"kick"},{"t":270.0922,"lane":2,"k":"mel","m":62,"i":"piano"},{"t":270.3064,"lane":1,"k":"mel","m":62,"i":"piano"},{"t":270.5207,"lane":0,"k":"mel","m":62,"i":"piano"},{"t":271.1636,"lane":0,"k":"mel","m":62,"i":"piano"},{"t":271.5922,"lane":2,"k":"mel","m":66,"i":"piano"},{"t":273.3064,"lane":2,"k":"mel","m":67,"i":"piano"},{"t":275.0207,"lane":0,"k":"mel","m":64,"i":"piano"},{"t":275.235,"lane":1,"k":"mel","m":66,"i":"piano"},{"t":275.4493,"lane":2,"k":"mel","m":67,"i":"piano"},{"t":275.6636,"lane":0,"k":"mel","m":67,"i":"piano"},{"t":276.0922,"lane":1,"k":"mel","m":67,"i":"piano"},{"t":276.6279,"lane":0,"k":"mel","m":66,"i":"piano"},{"t":277.0564,"lane":1,"k":"mel","m":67,"i":"piano"},{"t":277.1636,"lane":2,"k":"mel","m":69,"i":"piano"},{"t":277.3779,"lane":3,"k":"kick"},{"t":278.5564,"lane":0,"k":"mel","m":67,"i":"piano"},{"t":278.6636,"lane":1,"k":"mel","m":66,"i":"piano"},{"t":278.8779,"lane":2,"k":"mel","m":66,"i":"piano"},{"t":279.0922,"lane":3,"k":"kick"},{"t":279.5207,"lane":0,"k":"mel","m":67,"i":"piano"},{"t":279.735,"lane":1,"k":"mel","m":66,"i":"piano"},{"t":279.9493,"lane":2,"k":"mel","m":71,"i":"piano"},{"t":281.8779,"lane":1,"k":"mel","m":67,"i":"piano"},{"t":282.1993,"lane":1,"k":"mel","m":64,"i":"piano"},{"t":282.3064,"lane":3,"k":"snare"},{"t":282.5207,"lane":3,"k":"kick"},{"t":282.9493,"lane":1,"k":"mel","m":67,"i":"piano"},{"t":283.485,"lane":0,"k":"mel","m":66,"i":"piano"},{"t":283.9136,"lane":1,"k":"mel","m":67,"i":"piano"},{"t":284.0207,"lane":3,"k":"snare"},{"t":284.235,"lane":3,"k":"kick"},{"t":284.8779,"lane":1,"k":"mel","m":66,"i":"piano"},{"t":285.4136,"lane":3,"k":"kick"},{"t":287.0207,"lane":3,"k":"snare"}]}};
+
+/* ---------- lanes ---------- */
+const NLANE = 4;                       // melody x3 + drum x1
+const KEYS  = ["a","s","d","k"];
+const LABEL = ["A","S","D","K"];
+const COL = [
+  {m:"#ff4d9d", l:"#ffb3d8", d:"#c11f6b"},
+  {m:"#ffd93d", l:"#fff3ab", d:"#c79a00"},
+  {m:"#4dff88", l:"#b6ffcf", d:"#12b74f"},
+  {m:"#4db8ff", l:"#b8e4ff", d:"#0d7ec4"}
+];
+/* ---------- judgement ---------- */
+const J = [
+  {n:"JUST!!", w:0.035, s:1000, a:1.00, c:"#fff6a8"},
+  {n:"GREAT",  w:0.070, s:700,  a:0.80, c:"#4dff88"},
+  {n:"GOOD",   w:0.110, s:400,  a:0.50, c:"#4db8ff"},
+  {n:"BAD",    w:0.160, s:150,  a:0.20, c:"#c8a0ff"}
+];
+const MISS_W = 0.160;
+const LEADIN = 2.6;
+
+/* ---------- dom ---------- */
+const $ = id => document.getElementById(id);
+const cv = $("cv"), ctx = cv.getContext("2d");
+let W=0,H=0,DPR=1;
+function resize(){
+  DPR = Math.min(window.devicePixelRatio||1, 2);
+  W = cv.clientWidth; H = cv.clientHeight;
+  cv.width = W*DPR; cv.height = H*DPR;
+  ctx.setTransform(DPR,0,0,DPR,0,0);
+}
+window.addEventListener("resize",resize);
+
+/* ---------- audio ---------- */
+let actx=null, buffer=null, src=null, gain=null, ana=null, freqData=null;
+let sfx=null, master=null, verb=null, noiseBuf=null;
+const vioBuf = {};   // midi -> decoded AudioBuffer
+let startAt=0, running=false, paused=false;
+let TRAVEL=1.40, OFFSET=0, VOL=0.72, SEVOL=0.85;
+
+/* ====================================================================
+   INSTRUMENTS - every key press makes its own sound.
+   lanes 0-2 : piano, pitched with the melody note taken from the song
+   lane 3    : kick        lane 4 : snare
+   velocity comes from the judgement, so a tighter hit sounds
+   louder and brighter.
+   ==================================================================== */
+function makeNoise(){
+  const n = actx.sampleRate*0.4, b = actx.createBuffer(1,n,actx.sampleRate), d = b.getChannelData(0);
+  for(let i=0;i<n;i++) d[i]=Math.random()*2-1;
+  return b;
+}
+function mtof(m){ return 440*Math.pow(2,(m-69)/12); }
+
+function playPiano(m, vel){
+  const t0 = actx.currentTime+0.001, f = mtof(m);
+  const out = actx.createGain(); out.gain.value = 0.17*vel;
+  const lp  = actx.createBiquadFilter(); lp.type="lowpass";
+  lp.frequency.value = 1400 + 5200*vel*vel;      // precise hit = brighter tone
+  lp.Q.value = 0.4;
+  out.connect(lp); lp.connect(sfx);
+  // harmonic stack, upper partials die away first (like a real string)
+  const P=[[1,1.00,2.60],[2,0.46,1.70],[3,0.24,1.15],[4,0.13,0.80],[5,0.075,0.55],[6,0.045,0.40],[8,0.022,0.28]];
+  for(const [h,a,dec] of P){
+    const o=actx.createOscillator(); o.type="sine";
+    o.frequency.value = f*h*(1+0.00045*h*h);      // gentle inharmonicity
+    const g=actx.createGain();
+    g.gain.setValueAtTime(0.0001,t0);
+    g.gain.exponentialRampToValueAtTime(Math.max(0.0002,a),t0+0.005);
+    g.gain.exponentialRampToValueAtTime(0.0001,t0+dec);
+    o.connect(g); g.connect(out); o.start(t0); o.stop(t0+dec+0.05);
+  }
+  // hammer thump
+  const nz=actx.createBufferSource(); nz.buffer=noiseBuf;
+  const bp=actx.createBiquadFilter(); bp.type="bandpass"; bp.frequency.value=f*2.4; bp.Q.value=1.1;
+  const ng=actx.createGain();
+  ng.gain.setValueAtTime(0.09*vel,t0);
+  ng.gain.exponentialRampToValueAtTime(0.0001,t0+0.05);
+  nz.connect(bp); bp.connect(ng); ng.connect(sfx);
+  nz.start(t0); nz.stop(t0+0.08);
+}
+function playKick(vel){
+  const t0=actx.currentTime+0.001;
+  const o=actx.createOscillator(); o.type="sine";
+  o.frequency.setValueAtTime(165,t0);
+  o.frequency.exponentialRampToValueAtTime(46,t0+0.085);
+  const g=actx.createGain();
+  g.gain.setValueAtTime(0.0001,t0);
+  g.gain.exponentialRampToValueAtTime(0.52*vel,t0+0.005);
+  g.gain.exponentialRampToValueAtTime(0.0001,t0+0.36);
+  o.connect(g); g.connect(sfx); o.start(t0); o.stop(t0+0.4);
+  const nz=actx.createBufferSource(); nz.buffer=noiseBuf;      // beater click
+  const lp=actx.createBiquadFilter(); lp.type="lowpass"; lp.frequency.value=2600;
+  const ng=actx.createGain();
+  ng.gain.setValueAtTime(0.12*vel,t0);
+  ng.gain.exponentialRampToValueAtTime(0.0001,t0+0.030);
+  nz.connect(lp); lp.connect(ng); ng.connect(sfx); nz.start(t0); nz.stop(t0+0.06);
+}
+function playSnare(vel){
+  const t0=actx.currentTime+0.001;
+  const nz=actx.createBufferSource(); nz.buffer=noiseBuf;
+  const bp=actx.createBiquadFilter(); bp.type="bandpass";
+  bp.frequency.value=1700+1500*vel; bp.Q.value=0.7;
+  const hp=actx.createBiquadFilter(); hp.type="highpass"; hp.frequency.value=620;
+  const g=actx.createGain();
+  g.gain.setValueAtTime(0.0001,t0);
+  g.gain.exponentialRampToValueAtTime(0.30*vel,t0+0.003);
+  g.gain.exponentialRampToValueAtTime(0.0001,t0+0.16);
+  nz.connect(bp); bp.connect(hp); hp.connect(g); g.connect(sfx);
+  nz.start(t0); nz.stop(t0+0.22);
+  const o=actx.createOscillator(); o.type="triangle";       // drum body
+  o.frequency.setValueAtTime(215,t0);
+  o.frequency.exponentialRampToValueAtTime(148,t0+0.085);
+  const g2=actx.createGain();
+  g2.gain.setValueAtTime(0.0001,t0);
+  g2.gain.exponentialRampToValueAtTime(0.19*vel,t0+0.004);
+  g2.gain.exponentialRampToValueAtTime(0.0001,t0+0.13);
+  o.connect(g2); g2.connect(sfx); o.start(t0); o.stop(t0+0.18);
+}
+/* small hall, so the violin has some air around it */
+function makeIR(){
+  const len=Math.floor(actx.sampleRate*1.7);
+  const b=actx.createBuffer(2,len,actx.sampleRate);
+  for(let c=0;c<2;c++){
+    const d=b.getChannelData(c);
+    for(let i=0;i<len;i++){
+      const t=i/len;
+      d[i]=(Math.random()*2-1)*Math.pow(1-t,2.6)*(i<actx.sampleRate*0.012?0.25:1);
+    }
+  }
+  return b;
+}
+/* Violin: real bowed-string samples, physically modelled and rendered ahead of
+   time (one per semitone, tuned to within ~1 cent). Playing a sample is what makes
+   it read as a violin - an oscillator stack never quite does. */
+let VIOLIN_B64 = null;
+async function loadViolin(onp){
+  if(!VIOLIN_B64){
+    try{ VIOLIN_B64 = await (await fetch("violin.json",{cache:"force-cache"})).json(); }
+    catch(e){ VIOLIN_B64 = {}; }
+  }
+  const keys = Object.keys(VIOLIN_B64);
+  for(let i=0;i<keys.length;i++){
+    const k = keys[i];
+    try{
+      const bin = atob(VIOLIN_B64[k]);
+      const u = new Uint8Array(bin.length);
+      for(let j=0;j<bin.length;j++) u[j]=bin.charCodeAt(j);
+      vioBuf[k] = await actx.decodeAudioData(u.buffer);
+    }catch(e){ /* fall back to the synth for this pitch */ }
+    if(onp && (i%6===0)) onp(i/keys.length);
+  }
+}
+function playViolin(m, vel){
+  const t0 = actx.currentTime + 0.001;
+  let key = m, buf = vioBuf[key];
+  let rate = 1;
+  if(!buf){                                   // nearest sample, shifted if needed
+    let best=null;
+    for(const k in vioBuf){ const d=Math.abs(+k-m); if(best===null||d<Math.abs(best-m)) best=+k; }
+    if(best===null){ playViolinSynth(m, vel); return; }
+    buf = vioBuf[best]; rate = Math.pow(2,(m-best)/12);
+  }
+  const src2 = actx.createBufferSource();
+  src2.buffer = buf; src2.playbackRate.value = rate;
+  const g = actx.createGain();
+  const lvl = 0.36*vel;
+  g.gain.setValueAtTime(lvl, t0);
+  g.gain.setValueAtTime(lvl, t0 + buf.duration*0.72);
+  g.gain.linearRampToValueAtTime(0.0001, t0 + buf.duration);
+  const lp = actx.createBiquadFilter(); lp.type="lowpass";
+  lp.frequency.value = 2200 + 6000*vel*vel;   // a tighter hit gets a fuller bow
+  lp.Q.value = 0.5;
+  src2.connect(lp); lp.connect(g); g.connect(sfx);
+  if(verb){ const sd=actx.createGain(); sd.gain.value=0.30; g.connect(sd); sd.connect(verb); }
+  src2.start(t0); src2.stop(t0 + buf.duration + 0.05);
+}
+/* kept only as a safety net if a sample fails to decode */
+function playViolinSynth(m, vel){
+  const t0=actx.currentTime+0.001, f=mtof(m), dur=1.35;
+  const out=actx.createGain();
+  out.gain.setValueAtTime(0.0001,t0);
+  out.gain.exponentialRampToValueAtTime(0.18*vel,t0+0.05);
+  out.gain.exponentialRampToValueAtTime(0.0001,t0+dur);
+  const lp=actx.createBiquadFilter(); lp.type="lowpass"; lp.frequency.value=3600;
+  out.connect(lp); lp.connect(sfx);
+  for(const [det,amp] of [[-7,0.6],[0,1.0],[7,0.6]]){
+    const o=actx.createOscillator(); o.type="sawtooth";
+    o.frequency.value=f; o.detune.value=det;
+    const g=actx.createGain(); g.gain.value=amp*0.34;
+    o.connect(g); g.connect(out); o.start(t0); o.stop(t0+dur+0.05);
+  }
+}
+const VEL=[1.0,0.84,0.64,0.44];        // JUST / GREAT / GOOD / BAD
+function playHit(note, ji){
+  if(!sfx) return;
+  const v=VEL[ji];
+  if(note.k==="kick"){ playKick(v); return; }
+  if(note.k==="snare"){ playSnare(v); return; }
+  const m = note.m!=null ? note.m : 64;
+  if(note.i==="violin") playViolin(m,v); else playPiano(m,v);
+}
+
+function b64ToBuf(b64){
+  const bin = atob(b64), len = bin.length, out = new Uint8Array(len);
+  for(let i=0;i<len;i++) out[i]=bin.charCodeAt(i);
+  return out.buffer;
+}
+async function loadAudio(onp){
+  if(buffer) return;
+  actx = new (window.AudioContext||window.webkitAudioContext)();
+  onp(0.04);
+  $("loading").textContent="曲をダウンロードしています…";
+  const res = await fetch("song.mp3",{cache:"force-cache"});
+  if(!res.ok) throw new Error("song.mp3 "+res.status);
+  const total = +(res.headers.get("content-length")||0);
+  let ab;
+  if(total && res.body){                      // 進捗つきダウンロード
+    const rd=res.body.getReader(); const chunks=[]; let got=0;
+    for(;;){ const {done,value}=await rd.read(); if(done) break;
+      chunks.push(value); got+=value.length; onp(0.04+0.46*Math.min(1,got/total)); }
+    const buf=new Uint8Array(got); let o=0;
+    for(const c of chunks){ buf.set(c,o); o+=c.length; }
+    ab=buf.buffer;
+  }else{ ab=await res.arrayBuffer(); }
+  onp(0.5);
+  $("loading").textContent="音源をデコードしています…";
+  buffer = await actx.decodeAudioData(ab);
+  onp(0.8);
+  $("loading").textContent="バイオリンの音を読み込んでいます…";
+  await loadViolin(p=>onp(0.8+0.2*p));
+  onp(1);
+}
+function songTime(){ return actx.currentTime - startAt + OFFSET; }
+
+/* ---------- game state ---------- */
+let notes=[], head=0, score=0, combo=0, maxCombo=0;
+let cnt=[0,0,0,0,0];               // just, great, good, bad, miss
+let accSum=0, accMax=0;
+const rings=[], parts=[], texts=[];
+let laneGlow=new Array(4).fill(0), lanePress=new Array(4).fill(0), flash=0, shake=0, bass=0;
+let lastJudge=null;
+
+function resetGame(){
+  notes = CHART.notes.map(n=>({t:n.t, lane:n.lane, k:n.k, m:n.m, i:n.i, done:false}));
+  head=0; score=0; combo=0; maxCombo=0; cnt=[0,0,0,0,0];
+  accSum=0; accMax=0; rings.length=0; parts.length=0; texts.length=0;
+  laneGlow=new Array(NLANE).fill(0); lanePress=new Array(NLANE).fill(0);
+  flash=0; shake=0; lastJudge=null;
+}
+
+/* ---------- geometry ---------- */
+function geom(){
+  const touch = W < 760;                     // スマホ・タブレットは指で押す前提
+  const fw = touch ? Math.min(W*0.96, 560) : Math.min(W*0.66, 480, H*0.50);
+  const lw = fw/NLANE;
+  const fx = (W-fw)/2;
+  const jy = touch ? H - Math.max(190, Math.min(300, H*0.30))
+                   : H - Math.max(110, Math.min(160, H*0.17));
+  const r  = Math.min(lw*0.38, touch?34:32);
+  const pady = jy + r*1.7;                   // タップパッドの上端
+  return {fw,lw,fx,jy,r,touch,pady};
+}
+function laneX(i,g){ return g.fx + g.lw*(i+0.5); }
+
+/* ---------- effects ---------- */
+function burst(lane, ji, g){
+  const x = laneX(lane,g), y = g.jy, c = COL[lane];
+  const power = [1.0,0.72,0.48,0.28][ji];
+  laneGlow[lane] = Math.max(laneGlow[lane], power);
+  const n = [20,12,6,3][ji];
+  for(let i=0;i<n;i++){
+    const a = Math.random()*Math.PI*2, sp = (1.6+Math.random()*4.6)*power;
+    parts.push({x,y,vx:Math.cos(a)*sp,vy:Math.sin(a)*sp-1.4*power,
+      life:1, size:(2.2+Math.random()*3.4)*power,
+      col: ji===0 ? `hsl(${Math.random()*360},100%,${62+Math.random()*22}%)` : (Math.random()<.5?c.m:c.l)});
+  }
+  if(ji===0){
+    // no screen flash - the two rings and the confetti carry the "JUST" read
+    rings.push({x,y,r0:g.r*0.6,r1:g.r*4.4,life:1,w:5,col:"rainbow"});
+    rings.push({x,y,r0:g.r*0.4,r1:g.r*2.6,life:1,w:3,col:"#ffffff"});
+    shake = 3;
+  }else if(ji===1){
+    rings.push({x,y,r0:g.r*0.6,r1:g.r*3.0,life:1,w:4,col:c.m});
+    shake = 1.6;
+  }else if(ji===2){
+    rings.push({x,y,r0:g.r*0.6,r1:g.r*2.0,life:1,w:2.4,col:c.l});
+  }else{
+    rings.push({x,y,r0:g.r*0.6,r1:g.r*1.4,life:1,w:2,col:"#8d7eb4"});
+  }
+  texts.push({txt:J[ji].n, col:J[ji].c, life:1, ji, x, y:g.jy-g.r*2.3});
+}
+function missFx(lane,g){
+  const x=laneX(lane,g);
+  texts.push({txt:"MISS", col:"#ff6b6b", life:1, ji:4, x, y:g.jy-g.r*2.3});
+  for(let i=0;i<5;i++){
+    const a=Math.random()*Math.PI*2;
+    parts.push({x,y:g.jy,vx:Math.cos(a)*1.1,vy:Math.abs(Math.sin(a))*1.6+0.7,
+      life:1,size:2.2,col:"#6b5f88"});
+  }
+}
+
+/* ---------- judging ---------- */
+function judge(lane){
+  lanePress[lane]=1;
+  if(!running||paused) return;
+  const g = geom(), t = songTime();
+  let best=-1, bd=1e9;
+  for(let i=head;i<notes.length;i++){
+    const n=notes[i];
+    if(n.t - t > MISS_W) break;
+    if(n.done||n.lane!==lane) continue;
+    const d=Math.abs(n.t-t);
+    if(d<bd){bd=d;best=i;}
+  }
+  if(best<0||bd>MISS_W) return;
+  const n=notes[best]; n.done=true;
+  let ji=3;
+  for(let k=0;k<J.length;k++) if(bd<=J[k].w){ji=k;break;}
+  cnt[ji]++; accSum+=J[ji].a; accMax++;
+  combo++; if(combo>maxCombo) maxCombo=combo;
+  score += J[ji].s + Math.min(combo,60)*5;
+  lastJudge={ji,dt:(n.t - t)};
+  playHit(n, ji);            // <- the note you hit is the note you hear
+  burst(lane,ji,g);
+}
+function autoMiss(t,g){
+  while(head<notes.length && notes[head].t < t-MISS_W){
+    const n=notes[head];
+    if(!n.done){ n.done=true; cnt[4]++; accMax++; combo=0; missFx(n.lane,g); lastJudge={ji:4,dt:0}; }
+    head++;
+  }
+}
+
+/* ---------- input ---------- */
+const down=new Set();
+window.addEventListener("keydown",e=>{
+  const k=e.key.toLowerCase();
+  if((k===" "||k==="enter") && !$("title").classList.contains("hidden")){ e.preventDefault(); start(); return; }
+  if(k==="escape"){ if(running) togglePause(); return; }
+  const i=KEYS.indexOf(k);
+  if(i>=0){ e.preventDefault(); if(!down.has(k)){ down.add(k); judge(i); } }
+});
+window.addEventListener("keyup",e=>down.delete(e.key.toLowerCase()));
+/* マルチタッチ対応。判定ラインより下は画面全幅を4分割して受け付ける */
+const touchLane=new Map();
+function laneAt(x,y,g){
+  if(y < g.jy-g.r*3.2) return -1;
+  if(g.touch && y >= g.pady-g.r*0.6) return Math.max(0,Math.min(NLANE-1,Math.floor(x/(W/NLANE))));
+  const i=Math.floor((x-g.fx)/g.lw);
+  return (i>=0&&i<NLANE)?i:-1;
+}
+cv.addEventListener("pointerdown",e=>{
+  e.preventDefault();
+  if(!running||paused) return;
+  const g=geom(), i=laneAt(e.clientX,e.clientY,g);
+  if(i<0) return;
+  touchLane.set(e.pointerId,i);
+  judge(i);
+},{passive:false});
+cv.addEventListener("pointerup",e=>{ touchLane.delete(e.pointerId); });
+cv.addEventListener("pointercancel",e=>{ touchLane.delete(e.pointerId); });
+cv.addEventListener("touchstart",e=>e.preventDefault(),{passive:false});
+cv.addEventListener("contextmenu",e=>e.preventDefault());
+
+/* ---------- background ---------- */
+const blobs=[];
+for(let i=0;i<7;i++) blobs.push({
+  a:Math.random()*6.28, sp:0.05+Math.random()*0.14, rad:0.22+Math.random()*0.3,
+  r:120+Math.random()*220, hue:[330,50,140,205,25,275,190][i]
+});
+function drawBG(tt){
+  const gr=ctx.createLinearGradient(0,0,0,H);
+  gr.addColorStop(0,"#150a2b"); gr.addColorStop(.55,"#0d0620"); gr.addColorStop(1,"#06030f");
+  ctx.fillStyle=gr; ctx.fillRect(0,0,W,H);
+  ctx.globalCompositeOperation="lighter";
+  for(const b of blobs){
+    const a=b.a+tt*b.sp;
+    const x=W/2+Math.cos(a)*W*b.rad, y=H*0.42+Math.sin(a*1.31)*H*b.rad*0.8;
+    const rr=b.r*(1+bass*0.55);
+    const g2=ctx.createRadialGradient(x,y,0,x,y,rr);
+    g2.addColorStop(0,`hsla(${b.hue},95%,62%,${0.16+bass*0.16})`);
+    g2.addColorStop(1,"hsla(0,0%,0%,0)");
+    ctx.fillStyle=g2; ctx.beginPath(); ctx.arc(x,y,rr,0,6.284); ctx.fill();
+  }
+  ctx.globalCompositeOperation="source-over";
+}
+
+/* ---------- note drawing ---------- */
+const PN=["C","C#","D","D#","E","F","F#","G","G#","A","A#","B"];
+function drawNote(x,y,r,lane,kind,m,inst){
+  const c=COL[lane];
+  ctx.save();
+  ctx.shadowBlur=0;
+  ctx.beginPath(); ctx.arc(x,y,r,0,6.284);
+  const g=ctx.createLinearGradient(x,y-r,x,y+r);
+  g.addColorStop(0,c.l); g.addColorStop(.5,c.m); g.addColorStop(1,c.d);
+  ctx.fillStyle=g; ctx.fill();
+  ctx.shadowBlur=0;
+  ctx.lineWidth=Math.max(2,r*0.11); ctx.strokeStyle="rgba(255,255,255,.92)"; ctx.stroke();
+  if(inst==="violin"){                    // violin notes wear an extra ring
+    ctx.beginPath(); ctx.arc(x,y,r*1.24,0,6.284);
+    ctx.lineWidth=Math.max(1.6,r*0.075);
+    ctx.strokeStyle="rgba(255,255,255,.55)"; ctx.stroke();
+  }
+  if(kind!=="mel"){                       // drum notes
+    if(kind==="snare"){                   // snare: hollow ring
+      ctx.beginPath(); ctx.arc(x,y,r*0.44,0,6.284);
+      ctx.lineWidth=Math.max(2,r*0.15); ctx.strokeStyle="rgba(255,255,255,.92)"; ctx.stroke();
+    }else{                                // kick: solid core
+      ctx.beginPath(); ctx.arc(x,y,r*0.40,0,6.284);
+      ctx.fillStyle="rgba(255,255,255,.90)"; ctx.fill();
+      ctx.beginPath(); ctx.arc(x,y,r*0.40,0,6.284);
+      ctx.lineWidth=Math.max(1.4,r*0.07); ctx.strokeStyle=c.d; ctx.stroke();
+    }
+  }else{                                  // melody notes: glossy highlight + pitch name
+    ctx.beginPath(); ctx.ellipse(x,y-r*0.38,r*0.52,r*0.28,0,0,6.284);
+    ctx.fillStyle="rgba(255,255,255,.55)"; ctx.fill();
+    if(r>=17){
+      ctx.font=`900 ${Math.round(r*0.46)}px system-ui,sans-serif`;
+      ctx.textAlign="center"; ctx.textBaseline="middle";
+      ctx.fillStyle="rgba(255,255,255,.97)";
+      ctx.strokeStyle="rgba(0,0,0,.38)"; ctx.lineWidth=2.6;
+      const nm = m!=null ? PN[m%12]+(Math.floor(m/12)-1) : "";
+      if(nm){
+        const yy = y + r*0.20;
+        ctx.strokeText(nm,x,yy); ctx.fillText(nm,x,yy);
+      }
+    }
+  }
+  ctx.restore();
+}
+function drawButton(i,g){
+  const x=laneX(i,g), y=g.jy, r=g.r, c=COL[i];
+  const pr=lanePress[i], gl=laneGlow[i];
+  ctx.save();
+  // the button reacts by getting a firmer outline and filling in - no bloom
+  const sq=1-pr*0.16;
+  ctx.beginPath(); ctx.arc(x,y+pr*3,r*1.06*sq,0,6.284);
+  ctx.fillStyle="rgba(255,255,255,.07)"; ctx.fill();
+  ctx.lineWidth=3+gl*2.2;
+  ctx.strokeStyle=`rgba(255,255,255,${0.24+gl*0.42})`;
+  ctx.stroke();
+  ctx.beginPath(); ctx.arc(x,y+pr*3,r*0.80*sq,0,6.284);
+  ctx.fillStyle=`rgba(${hexRGB(c.m)},${0.12+pr*0.34+gl*0.24})`; ctx.fill();
+  ctx.fillStyle=`rgba(255,255,255,${0.34+pr*0.45})`;
+  ctx.font=`900 ${Math.round(r*0.72)}px system-ui,sans-serif`;
+  ctx.textAlign="center"; ctx.textBaseline="middle";
+  ctx.fillText(LABEL[i],x,y+pr*3+1);
+  ctx.restore();
+}
+/* スマホ用: 画面下の帯を4分割した大きなタップボタン */
+const PADLBL=["低い音","中くらい","高い音","ドラム"];
+function drawPads(g){
+  const top=g.pady, bot=H-8, pw=W/NLANE;
+  ctx.save();
+  for(let i=0;i<NLANE;i++){
+    const x=i*pw+4, w=pw-8, c=COL[i], pr=lanePress[i], gl=laneGlow[i];
+    const rr=16;
+    ctx.beginPath();
+    ctx.moveTo(x+rr,top); ctx.lineTo(x+w-rr,top); ctx.quadraticCurveTo(x+w,top,x+w,top+rr);
+    ctx.lineTo(x+w,bot-rr); ctx.quadraticCurveTo(x+w,bot,x+w-rr,bot);
+    ctx.lineTo(x+rr,bot); ctx.quadraticCurveTo(x,bot,x,bot-rr);
+    ctx.lineTo(x,top+rr); ctx.quadraticCurveTo(x,top,x+rr,top); ctx.closePath();
+    ctx.fillStyle=`rgba(${hexRGB(c.m)},${0.13+pr*0.42+gl*0.22})`; ctx.fill();
+    ctx.lineWidth=2+gl*2.4;
+    ctx.strokeStyle=`rgba(255,255,255,${0.22+pr*0.5+gl*0.3})`; ctx.stroke();
+    ctx.fillStyle=`rgba(255,255,255,${0.55+pr*0.4})`;
+    ctx.textAlign="center"; ctx.textBaseline="middle";
+    ctx.font=`900 ${Math.round(Math.min(pw*0.30,30))}px system-ui,sans-serif`;
+    ctx.fillText(LABEL[i], x+w/2, (top+bot)/2-9);
+    ctx.font=`800 ${Math.round(Math.min(pw*0.135,13))}px system-ui,sans-serif`;
+    ctx.fillStyle="rgba(255,255,255,.5)";
+    ctx.fillText(PADLBL[i], x+w/2, (top+bot)/2+16);
+  }
+  ctx.restore();
+}
+function hexRGB(h){
+  const n=parseInt(h.slice(1),16);
+  return `${(n>>16)&255},${(n>>8)&255},${n&255}`;
+}
+
+/* ---------- HUD ---------- */
+function drawHUD(t){
+  ctx.save();
+  ctx.textAlign="left"; ctx.textBaseline="top";
+  ctx.font="900 clamp(20px,4vw,34px) system-ui,sans-serif";
+  ctx.fillStyle="#fff"; ctx.globalAlpha=.95;
+  ctx.fillText(String(score).padStart(7,"0"), 22, 20);
+  ctx.font="800 11px system-ui,sans-serif"; ctx.fillStyle="#9d8ac9";
+  ctx.fillText("SCORE", 23, 8);
+  // progress
+  const p=Math.max(0,Math.min(1,t/CHART.duration));
+  ctx.fillStyle="rgba(255,255,255,.13)"; ctx.fillRect(22,H-26,W-44,4);
+  const pg=ctx.createLinearGradient(22,0,W-22,0);
+  pg.addColorStop(0,"#ff4d9d"); pg.addColorStop(.5,"#ffd93d"); pg.addColorStop(1,"#4db8ff");
+  ctx.fillStyle=pg; ctx.fillRect(22,H-26,(W-44)*p,4);
+  // combo
+  if(combo>=3){
+    const g=geom();
+    const pop = comboPop>0 ? 1+comboPop*0.22 : 1;
+    ctx.textAlign="center"; ctx.textBaseline="middle";
+    ctx.save();
+    ctx.translate(W/2, g.jy - Math.min(H*0.30,250));
+    ctx.scale(pop,pop);
+    ctx.font=`900 ${Math.round(Math.min(W*0.11,58))}px system-ui,sans-serif`;
+    const cg=ctx.createLinearGradient(0,-30,0,30);
+    cg.addColorStop(0,"#ffffff"); cg.addColorStop(1, combo>=50?"#ffd93d":"#b9a8e0");
+    ctx.fillStyle=cg; ctx.shadowBlur=0;
+    ctx.fillText(String(combo),0,0);
+    ctx.shadowBlur=0;
+    ctx.font="900 12px system-ui,sans-serif"; ctx.fillStyle="rgba(255,255,255,.7)";
+    ctx.fillText("COMBO",0,Math.min(W*0.075,40));
+    ctx.restore();
+  }
+  ctx.restore();
+}
+
+/* ---------- main loop ---------- */
+let comboPop=0, prevT=0, tt=0;
+function frame(){
+  requestAnimationFrame(frame);
+  const g=geom();
+  const t = running ? songTime() : 0;
+  const dt = Math.min(0.05, (performance.now()/1000) - prevT);
+  prevT = performance.now()/1000;
+  tt += dt;
+
+  if(ana){ ana.getByteFrequencyData(freqData);
+    let s=0; for(let i=1;i<10;i++) s+=freqData[i];
+    bass = bass*0.80 + (s/9/255)*0.20;
+  }else bass*=0.9;
+
+  ctx.save();
+  if(shake>0.2){ ctx.translate((Math.random()-0.5)*shake,(Math.random()-0.5)*shake); shake*=0.86; }
+  drawBG(tt);
+
+  // ---- lane columns ----
+  ctx.save();
+  for(let i=0;i<NLANE;i++){
+    const x=g.fx+g.lw*i;
+    const lg=ctx.createLinearGradient(0,0,0,g.jy);
+    lg.addColorStop(0,"rgba(255,255,255,0)");
+    lg.addColorStop(1,`rgba(${hexRGB(COL[i].m)},${0.05+laneGlow[i]*0.10})`);
+    ctx.fillStyle=lg; ctx.fillRect(x,0,g.lw,g.jy);
+    ctx.fillStyle="rgba(255,255,255,.07)"; ctx.fillRect(x,0,1,g.jy);
+  }
+  ctx.fillStyle="rgba(255,255,255,.07)"; ctx.fillRect(g.fx+g.lw*NLANE,0,1,g.jy);
+  // divider between melody(3) and drum(1)
+  ctx.fillStyle="rgba(255,255,255,.20)"; ctx.fillRect(g.fx+g.lw*3-1,0,2,g.jy);
+  // judge line
+  const jg=ctx.createLinearGradient(g.fx,0,g.fx+g.fw,0);
+  jg.addColorStop(0,"rgba(255,77,157,.85)"); jg.addColorStop(.5,"rgba(255,217,61,.85)");
+  jg.addColorStop(1,"rgba(77,184,255,.85)");
+  ctx.fillStyle=jg; ctx.fillRect(g.fx,g.jy-1.5,g.fw,3);
+  ctx.restore();
+
+  // ---- lane group captions ----
+  const IL = CHART.interlude || [1e9,1e9];
+  const inInterlude = running && t>=IL[0]-1.2 && t<=IL[1];
+  ctx.save();
+  ctx.font="800 10px system-ui,sans-serif"; ctx.textAlign="center"; ctx.textBaseline="top";
+  ctx.fillStyle=inInterlude?"rgba(210,175,255,.72)":"rgba(255,255,255,.30)";
+  ctx.fillText(inInterlude?"VIOLIN":"PIANO", g.fx+g.lw*1.5, g.jy+g.r*1.55);
+  ctx.fillStyle="rgba(255,255,255,.30)";
+  ctx.fillText("DRUM", g.fx+g.lw*3.5, g.jy+g.r*1.55);
+  ctx.restore();
+
+  if(running && !paused) autoMiss(t,g);
+
+  // ---- notes ----
+  const span = g.jy + g.r*2;
+  for(let i=head;i<notes.length;i++){
+    const n=notes[i];
+    const d=n.t-t;
+    if(d>TRAVEL) break;
+    if(n.done||d<-MISS_W) continue;
+    const y = g.jy - (d/TRAVEL)*span;
+    if(y<-g.r*2) continue;
+    let a=1;
+    if(d>TRAVEL*0.88) a=(TRAVEL-d)/(TRAVEL*0.12);
+    ctx.globalAlpha=Math.max(0,Math.min(1,a));
+    drawNote(laneX(n.lane,g), y, g.r, n.lane, n.k, n.m, n.i);
+  }
+  ctx.globalAlpha=1;
+
+  // ---- touch pads ----
+  if(g.touch) drawPads(g);
+  // ---- buttons ----
+  for(let i=0;i<NLANE;i++) drawButton(i,g);
+
+  // ---- rings ----
+  for(let i=rings.length-1;i>=0;i--){
+    const r=rings[i]; r.life-=dt*3.0;
+    if(r.life<=0){ rings.splice(i,1); continue; }
+    const p=1-r.life, rr=r.r0+(r.r1-r.r0)*(1-Math.pow(1-p,2.4));
+    ctx.save(); ctx.globalAlpha=r.life*0.95; ctx.lineWidth=r.w*r.life;
+    if(r.col==="rainbow"){
+      const rg=ctx.createLinearGradient(r.x-rr,r.y-rr,r.x+rr,r.y+rr);
+      rg.addColorStop(0,"#ff4d9d");rg.addColorStop(.3,"#ffd93d");
+      rg.addColorStop(.6,"#4dff88");rg.addColorStop(1,"#4db8ff");
+      ctx.strokeStyle=rg; ctx.shadowBlur=0;
+    }else{ ctx.strokeStyle=r.col; ctx.shadowBlur=0; }
+    ctx.beginPath(); ctx.arc(r.x,r.y,rr,0,6.284); ctx.stroke(); ctx.restore();
+  }
+  // ---- particles ----
+  ctx.save();
+  for(let i=parts.length-1;i>=0;i--){
+    const p=parts[i];
+    p.x+=p.vx; p.y+=p.vy; p.vy+=0.16; p.vx*=0.985; p.life-=dt*1.65;
+    if(p.life<=0){ parts.splice(i,1); continue; }
+    ctx.globalAlpha=Math.max(0,p.life);
+    ctx.fillStyle=p.col;
+    ctx.beginPath(); ctx.arc(p.x,p.y,p.size*p.life,0,6.284); ctx.fill();
+  }
+  ctx.restore();
+  // ---- judge texts ----
+  for(let i=texts.length-1;i>=0;i--){
+    const x=texts[i]; x.life-=dt*1.7;
+    if(x.life<=0){ texts.splice(i,1); continue; }
+    const p=1-x.life;
+    ctx.save();
+    ctx.globalAlpha=Math.min(1,x.life*2.1);
+    ctx.translate(x.x, x.y - p*34);
+    const sc = x.ji===0 ? 1.16+ (1-x.life)*0.10 : 1;
+    ctx.scale(sc,sc);
+    ctx.textAlign="center"; ctx.textBaseline="middle";
+    ctx.font=`900 ${x.ji===0?26:20}px system-ui,sans-serif`;
+    ctx.lineWidth=4; ctx.strokeStyle="rgba(0,0,0,.55)"; ctx.strokeText(x.txt,0,0);
+    if(x.ji===0){
+      const rg=ctx.createLinearGradient(-60,0,60,0);
+      rg.addColorStop(0,"#ff4d9d");rg.addColorStop(.35,"#ffd93d");
+      rg.addColorStop(.7,"#4dff88");rg.addColorStop(1,"#4db8ff");
+      ctx.fillStyle=rg; ctx.shadowBlur=0;
+    }else ctx.fillStyle=x.col;
+    ctx.fillText(x.txt,0,0);
+    ctx.restore();
+  }
+
+  // ---- lead-in countdown ----
+  if(running && t<0){
+    const n=Math.ceil(-t), fr=1-(-t-(n-1));
+    ctx.save();
+    ctx.textAlign="center"; ctx.textBaseline="middle";
+    ctx.translate(W/2, g.jy-Math.min(H*0.30,250));
+    const s=1+(1-fr)*0.6; ctx.scale(s,s);
+    ctx.globalAlpha=Math.min(1,fr*2.6);
+    ctx.font=`900 ${Math.round(Math.min(W*0.16,96))}px system-ui,sans-serif`;
+    ctx.lineWidth=7; ctx.strokeStyle="rgba(0,0,0,.5)";
+    const txt = n>3 ? "READY" : String(n);
+    ctx.strokeText(txt,0,0);
+    const cg=ctx.createLinearGradient(0,-50,0,50);
+    cg.addColorStop(0,"#fff"); cg.addColorStop(1,"#ffd93d");
+    ctx.fillStyle=cg; ctx.shadowBlur=0;
+    ctx.fillText(txt,0,0);
+    ctx.restore();
+  }
+
+  if(running) drawHUD(t);
+
+  ctx.restore();
+
+  for(let i=0;i<NLANE;i++){ laneGlow[i]*=0.88; lanePress[i]*=0.80; }
+  if(comboPop>0) comboPop-=dt*4;
+
+  // ---- end ----
+  if(running && !paused && t > CHART.duration + 1.6) finish();
+}
+
+/* ---------- flow ---------- */
+let lastCombo=0;
+setInterval(()=>{ if(combo!==lastCombo){ if(combo>lastCombo) comboPop=1; lastCombo=combo; } },16);
+
+function show(id){ ["title","loading0","pause","result"].forEach(s=>$(s).classList.toggle("hidden", s!==id)); }
+function showNone(){ ["title","loading0","pause","result"].forEach(s=>$(s).classList.add("hidden")); }
+
+async function start(){
+  show("loading0");
+  try{
+    await loadAudio(p=>{ $("lbar").style.width=(p*100)+"%"; });
+  }catch(err){
+    $("loading").textContent="音源の読み込みに失敗しました: "+err;
+    return;
+  }
+  await actx.resume();
+  resetGame();
+  if(!noiseBuf) noiseBuf = makeNoise();
+  if(!master){                       // soft limiter so stacked notes never clip
+    master = actx.createDynamicsCompressor();
+    // acts only on the very top of the signal, so the music is not squashed
+    master.threshold.value=-3; master.knee.value=10; master.ratio.value=6;
+    master.attack.value=0.002; master.release.value=0.15;
+    master.connect(actx.destination);
+  }
+  if(!sfx){ sfx = actx.createGain(); sfx.connect(master); }
+  if(!verb){ verb = actx.createConvolver(); verb.buffer = makeIR();
+             const vg = actx.createGain(); vg.gain.value = 0.9;
+             verb.connect(vg); vg.connect(master); }
+  sfx.gain.value = SEVOL;
+  gain = actx.createGain(); gain.gain.value=VOL;
+  ana = actx.createAnalyser(); ana.fftSize=256;
+  freqData = new Uint8Array(ana.frequencyBinCount);
+  src = actx.createBufferSource(); src.buffer=buffer;
+  src.connect(gain); gain.connect(ana); ana.connect(master);
+  startAt = actx.currentTime + LEADIN;
+  src.start(startAt);
+  running=true; paused=false;
+  showNone();
+}
+function togglePause(){
+  if(!running) return;
+  if(paused){ actx.resume(); paused=false; showNone(); }
+  else{ actx.suspend(); paused=true; show("pause"); }
+}
+function stopSong(){
+  running=false; paused=false;
+  try{ src.stop(); }catch(e){}
+  if(actx && actx.state==="suspended") actx.resume();
+}
+function finish(){
+  stopSong();
+  const total=cnt.reduce((a,b)=>a+b,0);
+  const acc = accMax? accSum/accMax : 0;
+  $("rScore").textContent=score.toLocaleString();
+  $("rAcc").textContent=(acc*100).toFixed(2)+"%";
+  $("rCombo").textContent=maxCombo;
+  $("rJ").textContent=cnt[0]; $("rG").textContent=cnt[1];
+  $("rO").textContent=cnt[2]; $("rB").textContent=cnt[3]; $("rM").textContent=cnt[4];
+  let rank="D";
+  if(acc>=0.98) rank="S+"; else if(acc>=0.95) rank="S"; else if(acc>=0.90) rank="A";
+  else if(acc>=0.80) rank="B"; else if(acc>=0.68) rank="C";
+  $("rank").textContent=rank;
+  $("rdiff").textContent=DIFF.toUpperCase();
+  $("fcbadge").classList.toggle("hidden", cnt[4]>0);
+  show("result");
+}
+function setDiff(d){
+  DIFF=d; CHART=CHARTS[d];
+  $("dEasy").classList.toggle("on", d==="easy");
+  $("dHard").classList.toggle("on", d==="hard");
+  $("dOrig").classList.toggle("on", d==="original");
+  // denser charts read better when the notes travel a little faster
+  const sp = (d==="hard") ? 120 : (d==="original" ? 130 : 145);
+  $("spd").value = sp; TRAVEL = sp/100; $("spdv").textContent = TRAVEL.toFixed(2);
+}
+$("dEasy").onclick=()=>setDiff("easy");
+$("dHard").onclick=()=>setDiff("hard");
+$("dOrig").onclick=()=>setDiff("original");
+$("nEasy").textContent=CHARTS.easy.notes.length+" NOTES";
+$("nHard").textContent=CHARTS.hard.notes.length+" NOTES";
+$("nOrig").textContent=CHARTS.original.notes.length+" NOTES";
+setDiff("easy");
+$("startBtn").onclick=start;
+$("retryBtn").onclick=()=>{ start(); };
+$("retryBtn2").onclick=()=>{ stopSong(); start(); };
+$("titleBtn").onclick=()=>{ show("title"); };
+$("quitBtn").onclick=()=>{ stopSong(); show("title"); };
+$("resumeBtn").onclick=togglePause;
+
+$("spd").oninput=e=>{ TRAVEL=+e.target.value/100; $("spdv").textContent=TRAVEL.toFixed(2); };
+$("off").oninput=e=>{ OFFSET=+e.target.value/1000; $("offv").textContent=e.target.value+" ms"; };
+$("vol").oninput=e=>{ VOL=+e.target.value/100; $("volv").textContent=e.target.value+"%"; if(gain) gain.gain.value=VOL; };
+$("sev").oninput=e=>{ SEVOL=+e.target.value/100; $("sevv").textContent=e.target.value+"%"; if(sfx) sfx.gain.value=SEVOL; };
+
+resize(); prevT=performance.now()/1000; frame();
+</script>
+</body>
+</html>
