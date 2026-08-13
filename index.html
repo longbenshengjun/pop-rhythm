@@ -484,11 +484,14 @@ function bgStart(){
 }
 function bgStop(){ if(bgKind==="video"){ try{ bgv.pause(); }catch(e){} } }
 function bgSync(t){
-  if(bgKind!=="video"||bgv.readyState<2) return;
+  if(bgKind!=="video"||bgv.readyState<2||bgv.seeking) return;
   const want=t+(SONG.bg.offset||0);
-  if(want<0) return;
-  if(bgv.paused && t>=0) bgv.play().catch(()=>{});
-  if(Math.abs(bgv.currentTime-want)>0.35 && want<bgv.duration) bgv.currentTime=want;
+  if(want<0||!(want<bgv.duration)) return;
+  if(Math.abs(bgv.currentTime-want)>0.35){
+    bgv.currentTime=want;      // ずれていたら合わせるだけ。同じフレームで play しない
+    return;                    // （シークが再生を打ち消してしまうため）
+  }
+  if(bgv.paused) bgv.play().catch(()=>{});
 }
 
 /* ---------- game state ---------- */
@@ -980,7 +983,8 @@ function selectSong(i){
 
 async function start(){
   if(bgKind==="video"){                       // iOS 用の再生解錠
-    try{ bgv.muted=true; const p=bgv.play(); if(p) p.then(()=>bgv.pause()).catch(()=>{}); }catch(e){}
+    // 解錠の pause がゲーム開始後に効いてしまわないよう !running を確認する
+    try{ bgv.muted=true; const p=bgv.play(); if(p) p.then(()=>{ if(!running) bgv.pause(); }).catch(()=>{}); }catch(e){}
   }
   show("loading0");
   try{
