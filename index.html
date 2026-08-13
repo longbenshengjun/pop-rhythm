@@ -353,23 +353,26 @@ function makeIR(){
 /* Violin: real bowed-string samples, physically modelled and rendered ahead of
    time (one per semitone, tuned to within ~1 cent). Playing a sample is what makes
    it read as a violin - an oscillator stack never quite does. */
-let VIOLIN_B64 = null;
+let VIOLIN_B64 = null, violinReady = false;
 async function loadViolin(onp){
+  if(!SONG.violin){ if(onp) onp(1); return; }     // 使わない曲では読み込まない
+  if(violinReady){ if(onp) onp(1); return; }
   if(!VIOLIN_B64){
     try{ VIOLIN_B64 = await (await fetch("violin.json",{cache:"force-cache"})).json(); }
     catch(e){ VIOLIN_B64 = {}; }
   }
   const keys = Object.keys(VIOLIN_B64);
-  for(let i=0;i<keys.length;i++){
-    const k = keys[i];
+  let done = 0;
+  await Promise.all(keys.map(async k=>{               // まとめて並列にデコード
     try{
       const bin = atob(VIOLIN_B64[k]);
       const u = new Uint8Array(bin.length);
       for(let j=0;j<bin.length;j++) u[j]=bin.charCodeAt(j);
       vioBuf[k] = await actx.decodeAudioData(u.buffer);
-    }catch(e){ /* fall back to the synth for this pitch */ }
-    if(onp && (i%6===0)) onp(i/keys.length);
-  }
+    }catch(e){ /* この音だけシンセで代用 */ }
+    done++; if(onp) onp(done/keys.length);
+  }));
+  violinReady = true;
 }
 function playViolin(m, vel){
   const t0 = actx.currentTime + 0.001;
@@ -429,7 +432,7 @@ function b64ToBuf(b64){
 async function loadAudio(onp){
   if(!actx) actx = new (window.AudioContext||window.webkitAudioContext)();
   if(BUFCACHE[SONG.id]){ buffer = BUFCACHE[SONG.id]; onp(0.8);
-    $("loading").textContent="バイオリンの音を読み込んでいます…";
+    if(SONG.violin) $("loading").textContent="バイオリンの音を読み込んでいます…";
     await loadViolin(p=>onp(0.8+0.2*p)); onp(1); return; }
   onp(0.04);
   $("loading").textContent="曲をダウンロードしています…";
@@ -450,7 +453,7 @@ async function loadAudio(onp){
   buffer = await actx.decodeAudioData(ab);
   BUFCACHE[SONG.id] = buffer;
   onp(0.8);
-  $("loading").textContent="バイオリンの音を読み込んでいます…";
+  if(SONG.violin) $("loading").textContent="バイオリンの音を読み込んでいます…";
   await loadViolin(p=>onp(0.8+0.2*p));
   onp(1);
 }
@@ -797,6 +800,8 @@ function frame(){
   if(shake>0.2){ ctx.translate((Math.random()-0.5)*shake,(Math.random()-0.5)*shake); shake*=0.86; }
   drawBG(tt);
 
+  const onSel = !$("songsel").classList.contains("hidden");
+  if(onSel){ ctx.restore(); for(let i=0;i<NLANE;i++){ laneGlow[i]*=0.88; lanePress[i]*=0.80; } return; }
   // ---- lane columns ----
   ctx.save();
   for(let i=0;i<NLANE;i++){
