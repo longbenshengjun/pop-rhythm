@@ -150,7 +150,7 @@
     <div class="opt"><span>判定オフセット</span><input type="range" id="off" min="-200" max="200" step="5" value="0"><span class="val" id="offv">0 ms</span></div>
     <div class="opt"><span>曲の音量</span><input type="range" id="vol" min="0" max="100" step="1" value="72"><span class="val" id="volv">72%</span></div>
     <div class="opt"><span>打鍵音の音量</span><input type="range" id="sev" min="0" max="100" step="1" value="85"><span class="val" id="sevv">85%</span></div>
-    <div class="opt"><span>背景の明るさ</span><input type="range" id="bgb" min="0" max="100" step="5" value="55"><span class="val" id="bgbv">55%</span></div>
+    <div class="opt"><span>背景の明るさ</span><input type="range" id="bgb" min="0" max="100" step="5" value="45"><span class="val" id="bgbv">45%</span></div>
   </div>
 
   <div class="backrow">
@@ -252,7 +252,7 @@ window.addEventListener("resize",resize);
 /* ---------- audio ---------- */
 let actx=null, buffer=null, src=null, gain=null, ana=null, freqData=null;
 const BUFCACHE = {};              // songId -> AudioBuffer
-let BGBRIGHT = 0.55;
+let BGBRIGHT = 0.45;
 let sfx=null, master=null, verb=null, noiseBuf=null;
 const vioBuf = {};   // midi -> decoded AudioBuffer
 let startAt=0, running=false, paused=false;
@@ -804,6 +804,11 @@ function frame(){
   if(onSel){ ctx.restore(); for(let i=0;i<NLANE;i++){ laneGlow[i]*=0.88; lanePress[i]*=0.80; } return; }
   // ---- lane columns ----
   ctx.save();
+  if(bgKind){                        // 映像の上でもノーツが読めるように、レーンの帯だけ暗く
+    ctx.fillStyle="rgba(4,2,12,.46)";
+    ctx.fillRect(g.fx,0,g.fw,g.jy+g.r*1.5);
+    if(g.touch){ ctx.fillStyle="rgba(4,2,12,.34)"; ctx.fillRect(0,g.pady-g.r*0.6,W,H); }
+  }
   for(let i=0;i<NLANE;i++){
     const x=g.fx+g.lw*i;
     const lg=ctx.createLinearGradient(0,0,0,g.jy);
