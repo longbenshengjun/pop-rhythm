@@ -474,13 +474,10 @@ function addJudge(kind, note){        // kind: 0=良 1=可 2=不可
     combo++; if(combo>maxCombo) maxCombo=combo;
     const before = gauge;
     gauge = Math.min(100, gauge + gaugeStep()*(kind===0?1:0.5));
-    if(before < CLEAR && gauge >= CLEAR && clearedAt < 0){   /* クリアに届いた！ */
-      clearedAt = performance.now()/1000;
-      const g = geom();
-      for(let i=0;i<5;i++)
-        fwBurst(CW*(0.2+Math.random()*0.6), g.laneY + g.laneH*(0.2+Math.random()*0.8),
-                46, 130 + Math.random()*90);
-    }
+    /* クリアに届いた時刻だけ覚えておく。
+       遊んでいる最中は何も出さない（花火や文字はノーツが見えなくなって邪魔になる）。
+       お祝いは結果画面でまとめて出す。 */
+    if(before < CLEAR && gauge >= CLEAR && clearedAt < 0) clearedAt = performance.now()/1000;
     let p = 500 + Math.min(combo,100)*3;
     if(kind===1) p = Math.floor(p/2/10)*10;
     if(note && note.big) p *= 2;          // 大音符は1回叩くだけで2倍
@@ -759,22 +756,6 @@ function draw(t){
     }
     ctx.globalAlpha = 1;
   }
-
-  /* クリアした瞬間の花火と文字 */
-  const el = performance.now()/1000 - clearedAt;
-  if(clearedAt > 0 && el < 3.0){
-    if(el < 1.4 && Math.random() < 0.10)
-      fwBurst(CW*(0.15+Math.random()*0.7), g.laneY + g.laneH*(0.1+Math.random()*0.9),
-              34, 110 + Math.random()*80);
-    const a = el < 1.9 ? 1 : (3.0-el)/1.1;
-    ctx.globalAlpha = Math.max(0, a);
-    ctx.textAlign = "center"; ctx.textBaseline = "middle";
-    ctx.fillStyle = "#ffd93d";
-    ctx.font = "800 " + Math.round(Math.min(64, CW*0.10)) + "px system-ui,sans-serif";
-    ctx.fillText("クリア！", CW/2, g.laneY + g.laneH/2);
-    ctx.globalAlpha = 1;
-  }
-  if(fwP.length) fwStep(ctx, Math.min(0.05, drawDt));
 
   /* 曲名 */
   ctx.textAlign = "left"; ctx.textBaseline = "bottom";
